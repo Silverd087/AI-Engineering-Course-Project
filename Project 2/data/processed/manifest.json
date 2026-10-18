@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-10-18T19:42:20.280035",
+  "count": 1,
+  "by_programme": {
+    "CSE": 1,
+    "SWE": 1,
+    "REE": 1
+  },
+  "by_year": {
+    "2026": 1
+  },
+  "by_type": {
+    "syllabus": 1
+  },
+  "documents": [
+    {
+      "title": "CS434 Syllabus",
+      "course_code": "CS434",
+      "source_path": "data\\raw\\CS434-SYLLABUS-F26.pdf",
+      "programmes": [
+        "CSE",
+        "SWE",
+        "REE"
+      ],
+      "year": 2026,
+      "semester": "Fall",
+      "source_type": "syllabus",
+      "prerequisites": [
+        "CS280"
+      ],
+      "corequisites": null,
+      "credits": "4 Credits / 4 Hours",
+      "text_length": 7251,
+      "num_sections": 0,
+      "num_tables": 0
+    }
+  ]
+}
