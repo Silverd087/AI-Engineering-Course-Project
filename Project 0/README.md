@@ -37,10 +37,20 @@ export CHEAP_MODEL_API_KEY=...
 ## Run
 
 ```bash
-# Generate + score SQL for all three models
-python src/run.py --items data/items.jsonl --out results/per_item.csv
+# 0. Build the local SQLite DB from schema.sql + seed.sql (one-time, or after editing either file)
+python data/build_db.py
 
-# Build the summary table (accuracy, cost/1k, p50/p95 latency)
+# 0b. Sanity-check the scorer itself: runs each item's own reference_sql as the
+#     "candidate" against data/bookstore.db -- should print 10/10 correct.
+python src/score.py --items data/items.jsonl --db data/bookstore.db --self-test --out results/self_test.csv
+
+# 1. Generate SQL from all three models (writes one JSONL row per {id, model, sql})
+python src/run.py --items data/items.jsonl --out results/raw_outputs.jsonl
+
+# 2. Score: executes each candidate + the reference SQL against data/bookstore.db, compares results
+python src/score.py --items data/items.jsonl --db data/bookstore.db --candidates results/raw_outputs.jsonl --out results/per_item.csv
+
+# 3. Build the summary table (accuracy, cost/1k, p50/p95 latency)
 python src/cost.py --in results/per_item.csv --out results/summary.csv
 ```
 
@@ -50,18 +60,23 @@ python src/cost.py --in results/per_item.csv --out results/summary.csv
 Project 0/
 ├── README.md
 ├── data/
-│   └── items.jsonl        # 50+ (question, db, reference query, expected result) items + labelling note
+│   ├── schema.sql           # bookstore DB schema: authors, books, customers, orders, order_items
+│   ├── seed.sql              # seed rows for the schema above
+│   ├── build_db.py           # builds data/bookstore.db from schema.sql + seed.sql
+│   ├── bookstore.db          # generated — do not hand-edit, run build_db.py instead
+│   ├── items.jsonl           # (question, reference_sql, category) items — 10 so far, target 50+
+│   └── labelling_note.md     # where questions came from, how correctness was verified, dev/test split
 ├── src/
-│   ├── prompt.txt          # the single shared prompt
-│   ├── run.py               # calls all 3 models, saves raw outputs
-│   ├── score.py             # executes generated vs reference SQL, compares results
-│   └── cost.py               # computes cost/1k requests, p50/p95 latency
+│   ├── prompt.txt           # the single shared prompt (TODO: Member B)
+│   ├── run.py                # calls all 3 models, saves results/raw_outputs.jsonl (TODO: Member B)
+│   ├── score.py              # executes generated vs reference SQL against bookstore.db, compares results (done)
+│   └── cost.py                # computes cost/1k requests, p50/p95 latency (TODO: Member C)
 ├── results/
-│   ├── per_item.csv        # one row per test item per model
-│   ├── summary.csv          # aggregated accuracy / cost / latency
-│   └── hardware_note.md     # specs used for the open-weights model
-├── report.pdf                # 2-page report (see brief)
-└── postmortem.md             # 1-page: what went wrong, what we learned
+│   ├── per_item.csv         # one row per test item per model
+│   ├── summary.csv           # aggregated accuracy / cost / latency
+│   └── hardware_note.md      # specs used for the open-weights model
+├── report.pdf                 # 2-page report (see brief)
+└── postmortem.md              # 1-page: what went wrong, what we learned
 ```
 
 ## Results
