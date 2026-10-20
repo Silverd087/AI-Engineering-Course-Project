@@ -17,6 +17,7 @@ from .loader import DocumentLoader
 from .models import DocumentMetadata, ParsedDocument
 from .metadata_extractor import MetadataExtractor
 from .pdf_parser import PDFParser
+from .word_parser import WordParser
 
 __all__ = [
     "ingest_documents",
@@ -25,4 +26,5 @@ __all__ = [
     "ParsedDocument",
     "MetadataExtractor",
     "PDFParser",
+    "WordParser",
 ]

@@ -1,9 +1,8 @@
-# src/ingest/loader.py
-
 from pathlib import Path
 from typing import List, Optional, Callable
 from .models import ParsedDocument, DocumentMetadata
 from .pdf_parser import PDFParser
+from .word_parser import WordParser
 from .metadata_extractor import MetadataExtractor
 import logging
 
@@ -22,7 +21,7 @@ class DocumentLoader:
     
     def __init__(self):
         """Initialize the loader with all available parsers."""
-        self.parsers = [PDFParser()]
+        self.parsers = [PDFParser(),WordParser()]
         self.metadata_extractor = MetadataExtractor()
         logger.info(f"DocumentLoader initialized with {len(self.parsers)} parsers")
     

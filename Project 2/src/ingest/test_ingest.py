@@ -3,6 +3,7 @@ from pathlib import Path
 from .loader import DocumentLoader
 from .metadata_extractor import MetadataExtractor
 from .pdf_parser import PDFParser
+from .word_parser import WordParser
 
 
 class TestMetadataExtractor:
@@ -46,6 +47,17 @@ class TestMetadataExtractor:
         assert meta.semester == "Spring"
         assert meta.year == 2025
 
+class TestWordParser:
+    """Test Word document parsing."""
+    
+    def test_word_can_parse(self):
+        """Test that WordParser recognizes Word files."""
+        parser = WordParser()
+        assert parser.can_parse(Path("test.docx"))
+        assert parser.can_parse(Path("Test.DOCX"))
+        assert parser.can_parse(Path("test.doc"))
+        assert not parser.can_parse(Path("test.pdf"))
+        assert not parser.can_parse(Path("test.txt"))
 
 class TestPDFParser:
     """Test PDF parsing."""
@@ -155,7 +167,7 @@ class TestDocumentLoader:
     def test_loader_initialization(self):
         """Test that loader initializes with all parsers."""
         loader = DocumentLoader()
-        assert len(loader.parsers) == 1
+        assert len(loader.parsers) == 2
         assert isinstance(loader.parsers[0], PDFParser)
     
     def test_load_from_nonexistent_folder(self):
