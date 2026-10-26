@@ -182,9 +182,9 @@ class IngestionOrchestrator:
                 bm25_index_path="",
                 num_chunks=0,
                 dense_model=self.dense_model,
-                sparse_model=self.sparse_model
+                sparse_model=self.sparse_model,
                 bm25_stats={},
-                vector_stats={}
+                vector_stats={},
             )
         
         logger.info("Building indexes for %d chunks", len(chunks))
@@ -245,7 +245,8 @@ def build_pipeline(
     vector_store_path: str = "data/indexes",
     chunk_size: int = 384,
     chunk_overlap: int = 64,
-    embedding_model: str = "sentence-transformers/multilingual-e5-base",
+    dense_model: str = "BAAI/bge-small-en-v1.5",
+    sparse_model: str = "Qdrant/bm25",   
     skip_errors: bool = True
 ) -> IngestionOrchestrator:
     """
@@ -265,8 +266,9 @@ def build_pipeline(
     
     Example:
         pipeline = build_pipeline(
-            chunk_size=512,
-            embedding_model="sentence-transformers/multilingual-e5-base"
+            chunk_size=384,
+            dense_model="BAAI/bge-small-en-v1.5",
+            sparse_model="Qdrant/bm25"
         )
         result = pipeline.run()
         print(f"Indexed {result.index.num_chunks} chunks")
@@ -277,7 +279,8 @@ def build_pipeline(
         vector_store_path=Path(vector_store_path),
         chunk_size=chunk_size,
         overlap=chunk_overlap,
-        embedding_model=embedding_model,
+        dense_model=dense_model,
+        sparse_model=sparse_model,
         skip_errors=skip_errors
     )
  

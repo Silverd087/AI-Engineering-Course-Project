@@ -18,9 +18,17 @@ class IndexConfig:
     # Payload fields to index in Qdrant for fast query-time filtering.
     # Update these tuples to match the metadata keys extracted during ingestion.
     keyword_fields: tuple[str, ...] = (
+        "title",
         "course_code",
+        "source_path",
         "programmes",
+        "year",
         "semester",
         "source_type",
+        "section",
+        "prerequisites",
+        "corequisites",
+        "recommended",
+        "credits"
     )
     integer_fields: tuple[str, ...] = ("year",)
