@@ -38,7 +38,8 @@ class IndexResult:
     vector_store_path: str               # Path to vector database
     bm25_index_path: str                 # Path to BM25 index
     num_chunks: int                      # Total chunks indexed
-    embedding_model: str                 # Name of embedding model used
+    dense_model: str                     # Name of dense embedding model used
+    sparse_model:str                     # Name of sparse embedding model used
     bm25_stats: Dict[str, Any]           # BM25 statistics
     vector_stats: Dict[str, Any]         # Vector store statistics
 

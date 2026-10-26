@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import uuid
-from collections.abc import Iterable, Iterator
-from typing import Literal
+from collections.abc import Iterable
+from typing import Any
 
 from fastembed import SparseTextEmbedding, TextEmbedding
 from qdrant_client import QdrantClient, models
 
 from core.models import Chunk
 from indexing.config import IndexConfig
+from core.models import IndexResult
 
 DENSE = "dense"
 SPARSE = "sparse"
@@ -56,7 +57,7 @@ class QdrantHybridRepository:
                 self.config.collection, name, models.PayloadSchemaType.INTEGER
             )
 
-    def add_chunks(self, chunks: Iterable[Chunk]) -> int:
+    def add_chunks(self, chunks: Iterable[Chunk]) -> IndexResult:
         total = 0
         batch: list[Chunk] = []
 
@@ -67,7 +68,36 @@ class QdrantHybridRepository:
                 batch = []
         if batch:
             total += self._upsert_batch(batch)
-        return total
+
+        collection_info = self.client.get_collection(self.config.collection)
+        points_count = collection_info.points_count or total
+        indexed_vectors_count = collection_info.indexed_vectors_count or 0 
+        vector_stats: dict[str, Any] = {
+                    "collection_name": self.config.collection,
+                    "dense_dimension": self.dense_dim,
+                    "distance_metric": "cosine",
+                    "total_points": points_count,
+                    "indexed_vectors_count": indexed_vectors_count,
+                    "status": str(collection_info.status),
+        }
+        bm25_stats: dict[str, Any] = {
+            "sparse_model": self.config.sparse_model,
+            "modifier": "idf",
+            "total_documents": points_count,
+            "storage": "qdrant_sparse_vector",
+        }
+        bm25_index_location = f"qdrant://{self.config.collection}/{SPARSE}"
+        vector_store_location = getattr(self.config, "vector_store_path", "data/indexes")
+
+        return IndexResult(
+            vector_store_path=str(vector_store_location),
+            num_chunks=total,
+            dense_model=self.config.dense_model,
+            sparse_model=self.config.sparse_model,
+            bm25_stats=bm25_stats,
+            vector_stats=vector_stats,
+            bm25_index_path=bm25_index_location,
+        )
 
     def _upsert_batch(self, batch: list[Chunk]) -> int:
         texts = [c.text for c in batch]

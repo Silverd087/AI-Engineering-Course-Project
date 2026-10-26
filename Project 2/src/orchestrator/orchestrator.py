@@ -6,7 +6,11 @@ from src.core.models import PipelineResult,Chunk,IndexResult
  
 # Ingestion imports
 from src.ingest import ingest_documents, DocumentLoader, ParsedDocument
- 
+from src.chunking.chunker import DocumentChunker
+from src.indexing.repository import QdrantHybridRepository
+from src.indexing.config import IndexConfig
+from qdrant_client import QdrantClient
+
 logger = logging.getLogger(__name__)
 
 class IngestionOrchestrator:
@@ -20,14 +24,15 @@ class IngestionOrchestrator:
     
     def __init__(
         self,
+        qdrant_client: QdrantClient,
         raw_folder: Path = Path("data/raw"),
         processed_folder: Path = Path("data/processed"),
-        indexes_folder: Path = Path("data/indexes"),
+        vector_store_path: Path = Path("data/indexes"),
         chunk_size: int = 384,
         chunk_overlap: int = 64,
         dense_model: str = "BAAI/bge-small-en-v1.5",
         sparse_model: str = "Qdrant/bm25",     
-        skip_errors: bool = True
+        skip_errors: bool = True,
     ):
         """
         Initialize the orchestrator.
@@ -35,7 +40,7 @@ class IngestionOrchestrator:
         Args:
             raw_folder: Where source documents are
             processed_folder: Where to save processed outputs
-            indexes_folder: Where to save indexes
+            vector_store_path: Where to save indexes
             chunk_size: Target chunk size for chunking
             overlap: Overlap between chunks
             embedding_model: Model for embeddings
@@ -43,21 +48,22 @@ class IngestionOrchestrator:
         """
         self.raw_folder = Path(raw_folder)
         self.processed_folder = Path(processed_folder)
-        self.indexes_folder = Path(indexes_folder)
+        self.vector_store_path = Path(vector_store_path)
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.dense_model: str = dense_model
         self.sparse_model: str = sparse_model
         self.skip_errors = skip_errors
+        self.qdrant_client = qdrant_client
         
         # Create output folders
         self.processed_folder.mkdir(parents=True, exist_ok=True)
-        self.indexes_folder.mkdir(parents=True, exist_ok=True)
+        self.vector_store_path.mkdir(parents=True, exist_ok=True)
         
         logger.info(f"IngestionOrchestrator initialized")
         logger.info(f"  Raw folder: {self.raw_folder}")
         logger.info(f"  Output folder: {self.processed_folder}")
-        logger.info(f"  Indexes folder: {self.indexes_folder}")
+        logger.info(f"  Indexes folder: {self.vector_store_path}")
     
     def run(self) -> PipelineResult:
         """
@@ -144,23 +150,22 @@ class IngestionOrchestrator:
                    len(documents), self.chunk_size, self.chunk_overlap)
         
         try:
-            chunks = chunk_documents(
-                documents,
-                chunk_size=self.chunk_size,
-                overlap=self.chunk_overlap
-            )
-            
+            chunker = DocumentChunker(self.chunk_size,self.chunk_overlap)
+            chunk_iterator = chunker.split_all(documents)
+            chunks = []
             logger.info("✓ Chunking complete: %d chunks created", len(chunks))
             
             # Statistics
-            if chunks:
+            if chunk_iterator:
+                for chunk in chunk_iterator:
+                    chunks.append(chunk)
                 avg_length = sum(len(c.text) for c in chunks) / len(chunks)
                 logger.info("  Average chunk length: %.0f characters", avg_length)
                 logger.info("  Min/max length: %d/%d characters",
                            min(len(c.text) for c in chunks),
                            max(len(c.text) for c in chunks))
             
-            return chunks
+            return chunk_iterator
         
         except Exception as e:
             logger.error("✗ Chunking failed: %s", e)
@@ -176,7 +181,8 @@ class IngestionOrchestrator:
                 vector_store_path="",
                 bm25_index_path="",
                 num_chunks=0,
-                embedding_model=self.embedding_model,
+                dense_model=self.dense_model,
+                sparse_model=self.sparse_model
                 bm25_stats={},
                 vector_stats={}
             )
@@ -185,11 +191,12 @@ class IngestionOrchestrator:
         logger.info("  Embedding model: %s", self.embedding_model)
         
         try:
-            index_result = build_indexes(
-                chunks,
-                output_path=str(self.indexes_folder),
-                embedding_model=self.embedding_model
-            )
+            index_config = IndexConfig(
+                dense_model=self.dense_model,
+                sparse_model=self.sparse_model
+                )
+            indexer = QdrantHybridRepository(self.qdrant_client,index_config)
+            index_result = indexer.add_chunks(chunks)
             
             logger.info("✓ Indexing complete")
             logger.info("  Vector store: %s", index_result.vector_store_path)
@@ -235,7 +242,7 @@ class IngestionOrchestrator:
 def build_pipeline(
     raw_folder: str = "data/raw",
     processed_folder: str = "data/processed",
-    indexes_folder: str = "data/indexes",
+    vector_store_path: str = "data/indexes",
     chunk_size: int = 384,
     chunk_overlap: int = 64,
     embedding_model: str = "sentence-transformers/multilingual-e5-base",
@@ -247,7 +254,7 @@ def build_pipeline(
     Args:
         raw_folder: Where source documents are stored
         processed_folder: Where to save processed outputs
-        indexes_folder: Where to save vector and keyword indexes
+        vector_store_path: Where to save vector and keyword indexes
         chunk_size: Target size for document chunks
         overlap: Overlap between consecutive chunks
         embedding_model: Transformer model for embeddings
@@ -267,7 +274,7 @@ def build_pipeline(
     return IngestionOrchestrator(
         raw_folder=Path(raw_folder),
         processed_folder=Path(processed_folder),
-        indexes_folder=Path(indexes_folder),
+        vector_store_path=Path(vector_store_path),
         chunk_size=chunk_size,
         overlap=chunk_overlap,
         embedding_model=embedding_model,
