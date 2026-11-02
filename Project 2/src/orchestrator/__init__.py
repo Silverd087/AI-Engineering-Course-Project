@@ -16,8 +16,6 @@ from .orchestrator import (
     PipelineResult,
     Chunk,
     IndexResult,
-    chunk_documents,
-    build_indexes,
 )
 
 __all__ = [
@@ -26,6 +24,4 @@ __all__ = [
     "PipelineResult",
     "Chunk",
     "IndexResult",
-    "chunk_documents",
-    "build_indexes",
 ]

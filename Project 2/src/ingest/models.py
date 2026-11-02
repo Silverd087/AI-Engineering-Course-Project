@@ -40,6 +40,7 @@ class ParsedDocument:
     
     Contains the extracted text, metadata, and structural information.
     """
+    doc_id:str
     metadata: DocumentMetadata          # Updated metadata
     text: str                           # Full extracted text
     sections: List[tuple]               # List of (heading, content) tuples

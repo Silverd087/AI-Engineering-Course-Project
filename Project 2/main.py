@@ -8,7 +8,7 @@ from qdrant_client import QdrantClient
 from chunking.chunker import DocumentChunker
 from indexing.config import IndexConfig
 from indexing.repository import QdrantHybridRepository
-from ingestion.parsers import load_all_documents  # adjust to your parser's function
+from ingest.ingest import ingest_documents
 
 
 def main() -> None:
@@ -19,7 +19,7 @@ def main() -> None:
 
     # 2. Ingest
     print("Loading documents from ingestion...")
-    documents = load_all_documents("data/")  # your parsed documents iterable
+    documents = ingest_documents("data/")  # your parsed documents iterable
 
     # 3. Chunk
     print("Chunking documents...")

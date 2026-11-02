@@ -2,13 +2,13 @@ import logging
 from pathlib import Path
 from typing import List
 from datetime import datetime
-from src.core.models import PipelineResult,Chunk,IndexResult
+from core.models import PipelineResult,Chunk,IndexResult
  
 # Ingestion imports
-from src.ingest import ingest_documents, DocumentLoader, ParsedDocument
-from src.chunking.chunker import DocumentChunker
-from src.indexing.repository import QdrantHybridRepository
-from src.indexing.config import IndexConfig
+from ingest import ingest_documents, DocumentLoader, ParsedDocument
+from chunking.chunker import DocumentChunker
+from indexing.repository import QdrantHybridRepository
+from indexing.config import IndexConfig
 from qdrant_client import QdrantClient
 
 logger = logging.getLogger(__name__)
@@ -274,13 +274,18 @@ def build_pipeline(
         print(f"Indexed {result.index.num_chunks} chunks")
     """
     return IngestionOrchestrator(
+        qdrant_client=QdrantClient(url="http://localhost:6333"),
         raw_folder=Path(raw_folder),
         processed_folder=Path(processed_folder),
         vector_store_path=Path(vector_store_path),
         chunk_size=chunk_size,
-        overlap=chunk_overlap,
+        chunk_overlap=chunk_overlap,
         dense_model=dense_model,
         sparse_model=sparse_model,
         skip_errors=skip_errors
     )
- 
+
+
+if __name__ == "__main__":
+    pipeline = build_pipeline()
+    pipeline.run()
