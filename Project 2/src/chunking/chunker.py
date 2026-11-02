@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import re
-from typing import Iterator
+from dataclasses import asdict, is_dataclass
+from typing import Any, Iterator
 
 import tiktoken
 
@@ -44,8 +45,36 @@ class DocumentChunker:
             units.append(buf)
         return units
 
+    def _extract_metadata_dict(self, raw_metadata: Any) -> dict[str, Any]:
+        """Converts raw metadata into a dictionary regardless of its type."""
+        if isinstance(raw_metadata, dict):
+            return dict(raw_metadata)
+        if is_dataclass(raw_metadata):
+            return asdict(raw_metadata)
+        if hasattr(raw_metadata, "to_dict"):
+            return raw_metadata.to_dict()
+        if hasattr(raw_metadata, "__dict__"):
+            return vars(raw_metadata).copy()
+        return {}
+
     def split_document(self, doc: Document) -> Iterator[Chunk]:
-        units = self._split_units(doc.text)
+        # Safely extract metadata dictionary
+        meta_dict = self._extract_metadata_dict(getattr(doc, "metadata", None))
+
+        # Safely resolve doc_id from doc or metadata
+        doc_id = (
+            getattr(doc, "doc_id", None)
+            or getattr(doc, "id", None)
+            or meta_dict.get("doc_id")
+            or meta_dict.get("id")
+            or meta_dict.get("source")
+            or "doc"
+        )
+
+        # Get text, supporting either .text or .content
+        text = getattr(doc, "text", None) or getattr(doc, "content", "")
+
+        units = self._split_units(text)
         current_tokens: list[int] = []
         current_text = ""
         chunk_idx = 0
@@ -56,9 +85,9 @@ class DocumentChunker:
             if len(current_tokens) + len(unit_tokens) > self.chunk_size:
                 if current_tokens:
                     yield Chunk(
-                        chunk_id=f"{doc.doc_id}::{chunk_idx}",
+                        chunk_id=f"{doc_id}::{chunk_idx}",
                         text=current_text.strip(),
-                        metadata={**doc.metadata, "doc_id": doc.doc_id, "chunk_index": chunk_idx},
+                        metadata={**meta_dict, "doc_id": doc_id, "chunk_index": chunk_idx},
                     )
                     chunk_idx += 1
                     overlap_tokens = current_tokens[-self.chunk_overlap :]
@@ -70,9 +99,9 @@ class DocumentChunker:
 
         if current_tokens and current_text.strip():
             yield Chunk(
-                chunk_id=f"{doc.doc_id}::{chunk_idx}",
+                chunk_id=f"{doc_id}::{chunk_idx}",
                 text=current_text.strip(),
-                metadata={**doc.metadata, "doc_id": doc.doc_id, "chunk_index": chunk_idx},
+                metadata={**meta_dict, "doc_id": doc_id, "chunk_index": chunk_idx},
             )
 
     def split_all(self, docs: Iterator[Document]) -> Iterator[Chunk]:

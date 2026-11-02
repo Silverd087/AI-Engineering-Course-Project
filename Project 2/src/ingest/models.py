@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+from dataclasses import dataclass,field
 from typing import Optional, List
- 
+from uuid import uuid4
  
 @dataclass
 class DocumentMetadata:
@@ -40,11 +40,12 @@ class ParsedDocument:
     
     Contains the extracted text, metadata, and structural information.
     """
-    doc_id:str
+    
     metadata: DocumentMetadata          # Updated metadata
     text: str                           # Full extracted text
     sections: List[tuple]               # List of (heading, content) tuples
     tables: List[str]                   # List of extracted tables (as text)
+    doc_id: Optional[str] = field(default_factory=lambda: str(uuid4()))
     
     def summary(self) -> dict:
         """Return a summary of the document."""

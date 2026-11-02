@@ -186,9 +186,9 @@ class IngestionOrchestrator:
                 bm25_stats={},
                 vector_stats={},
             )
-        
-        logger.info("Building indexes for %d chunks", len(chunks))
-        logger.info("  Embedding model: %s", self.embedding_model)
+        chunks_list = list(chunks) if not isinstance(chunks, list) else chunks
+        logger.info("Building indexes for %d chunks", len(chunks_list))
+        logger.info("Dense Embedding model: %s", self.dense_model)
         
         try:
             index_config = IndexConfig(
