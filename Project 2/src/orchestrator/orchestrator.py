@@ -1,291 +1,203 @@
+from __future__ import annotations
+
+import hashlib
 import logging
-from pathlib import Path
-from typing import List
 from datetime import datetime
-from core.models import PipelineResult,Chunk,IndexResult
- 
-# Ingestion imports
-from ingest import ingest_documents, DocumentLoader, ParsedDocument
-from chunking.chunker import DocumentChunker
-from indexing.repository import QdrantHybridRepository
-from indexing.config import IndexConfig
+from pathlib import Path
+
 from qdrant_client import QdrantClient
+
+from chunking.chunker import DocumentChunker
+from core.models import Chunk, Document, IndexResult, PipelineResult
+from indexing.config import IndexConfig
+from indexing.repository import QdrantHybridRepository
+from ingest import ParsedDocument, ingest_documents
 
 logger = logging.getLogger(__name__)
 
+
+def to_document(parsed: ParsedDocument) -> Document:
+    """Convert an ingestion output into the Document type the chunker expects."""
+    meta = parsed.metadata
+    source_path = str(meta.source_path)
+    return Document(
+        doc_id=hashlib.sha256(source_path.encode("utf-8")).hexdigest()[:16],
+        text=parsed.text,
+        metadata={
+            "title": meta.title,
+            "course_code": meta.course_code,
+            "source_path": source_path,
+            "programmes": list(meta.programmes or []),
+            "year": meta.year,
+            "semester": meta.semester,
+            "source_type": meta.source_type,
+            "section": meta.section,
+            "prerequisites": list(meta.prerequisites or []),
+            "corequisites": list(meta.corequisites or []),
+            "credits": meta.credits,
+        },
+    )
+
+
 class IngestionOrchestrator:
-    """
-    Orchestrates the entire ingestion → chunking → indexing pipeline.
-    
+    """Runs ingestion, chunking and indexing in order.
+
     Usage:
-        orchestrator = IngestionOrchestrator()
+        orchestrator = IngestionOrchestrator(QdrantClient(url="http://localhost:6333"))
         result = orchestrator.run()
     """
-    
+
     def __init__(
         self,
         qdrant_client: QdrantClient,
         raw_folder: Path = Path("data/raw"),
         processed_folder: Path = Path("data/processed"),
-        vector_store_path: Path = Path("data/indexes"),
         chunk_size: int = 384,
         chunk_overlap: int = 64,
         dense_model: str = "BAAI/bge-small-en-v1.5",
-        sparse_model: str = "Qdrant/bm25",     
+        sparse_model: str = "Qdrant/bm25",
         skip_errors: bool = True,
-    ):
-        """
-        Initialize the orchestrator.
-        
-        Args:
-            raw_folder: Where source documents are
-            processed_folder: Where to save processed outputs
-            vector_store_path: Where to save indexes
-            chunk_size: Target chunk size for chunking
-            overlap: Overlap between chunks
-            embedding_model: Model for embeddings
-            skip_errors: Continue on errors vs. fail fast
-        """
+    ) -> None:
+        self.qdrant_client = qdrant_client
         self.raw_folder = Path(raw_folder)
         self.processed_folder = Path(processed_folder)
-        self.vector_store_path = Path(vector_store_path)
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
-        self.dense_model: str = dense_model
-        self.sparse_model: str = sparse_model
+        self.dense_model = dense_model
+        self.sparse_model = sparse_model
         self.skip_errors = skip_errors
-        self.qdrant_client = qdrant_client
-        
-        # Create output folders
+
         self.processed_folder.mkdir(parents=True, exist_ok=True)
-        self.vector_store_path.mkdir(parents=True, exist_ok=True)
-        
-        logger.info(f"IngestionOrchestrator initialized")
-        logger.info(f"  Raw folder: {self.raw_folder}")
-        logger.info(f"  Output folder: {self.processed_folder}")
-        logger.info(f"  Indexes folder: {self.vector_store_path}")
-    
+        logger.info("Orchestrator ready: raw=%s processed=%s", self.raw_folder, self.processed_folder)
+
     def run(self) -> PipelineResult:
-        """
-        Run the complete pipeline: ingest → chunk → index.
-        
-        Returns:
-            PipelineResult with all outputs
-        """
-        logger.info("")
-        logger.info("="*80)
-        logger.info("LIBRARIAN PIPELINE ORCHESTRATION")
-        logger.info("="*80)
-        logger.info("")
-        
-        # Stage 1: Ingestion
-        logger.info("STAGE 1: INGESTION")
-        logger.info("-" * 80)
+        logger.info("Starting ingestion pipeline")
+
         documents = self._stage_ingestion()
-        
-        # Stage 2: Chunking
-        logger.info("")
-        logger.info("STAGE 2: CHUNKING")
-        logger.info("-" * 80)
         chunks = self._stage_chunking(documents)
-        
-        # Stage 3: Indexing
-        logger.info("")
-        logger.info("STAGE 3: INDEXING")
-        logger.info("-" * 80)
         index_result = self._stage_indexing(chunks)
-        
-        # Build result
+
         result = PipelineResult(
             timestamp=datetime.now().isoformat(),
             documents=documents,
             chunks=chunks,
             index=index_result,
-            manifest_path=str(self.processed_folder / "manifest.json")
+            manifest_path=str(self.processed_folder / "manifest.json"),
         )
-        
-        # Print summary
-        logger.info("")
-        logger.info("PIPELINE COMPLETE")
-        logger.info("-" * 80)
         self._print_summary(result)
-        
         return result
-    
-    def _stage_ingestion(self) -> List[ParsedDocument]:
-        """Run ingestion stage."""
-        logger.info("Loading documents from %s", self.raw_folder)
-        
+
+    def _stage_ingestion(self) -> list[ParsedDocument]:
         try:
             documents = ingest_documents(
                 raw_folder=self.raw_folder,
-                output_folder=self.processed_folder
+                output_folder=self.processed_folder,
             )
-            
-            logger.info("✓ Ingestion complete: %d documents loaded", len(documents))
-            logger.info("  Manifest saved to data/processed/manifest.json")
-            
-            # Print summary
-            total_chars = sum(len(d.text) for d in documents)
-            logger.info("  Total text: %d characters", total_chars)
-            
-            with_prereqs = [d for d in documents if d.metadata.prerequisites]
-            logger.info("  Documents with prerequisites: %d", len(with_prereqs))
-            
-            return documents
-        
         except Exception as e:
-            logger.error("✗ Ingestion failed: %s", e)
+            logger.error("Ingestion failed: %s", e)
             if not self.skip_errors:
                 raise
             return []
-    
-    def _stage_chunking(self, documents: List[ParsedDocument]) -> List[Chunk]:
-        """Run chunking stage."""
+
+        logger.info("Ingestion complete: %d documents", len(documents))
+        return documents
+
+    def _stage_chunking(self, documents: list[ParsedDocument]) -> list[Chunk]:
         if not documents:
-            logger.warning("⚠ No documents to chunk")
+            logger.warning("No documents to chunk")
             return []
-        
-        logger.info("Chunking %d documents (size=%d, overlap=%d)",
-                   len(documents), self.chunk_size, self.chunk_overlap)
-        
+
+        logger.info(
+            "Chunking %d documents (size=%d, overlap=%d)",
+            len(documents), self.chunk_size, self.chunk_overlap,
+        )
         try:
-            chunker = DocumentChunker(self.chunk_size,self.chunk_overlap)
-            chunk_iterator = chunker.split_all(documents)
-            chunks = []
-            logger.info("✓ Chunking complete: %d chunks created", len(chunks))
-            
-            # Statistics
-            if chunk_iterator:
-                for chunk in chunk_iterator:
-                    chunks.append(chunk)
-                avg_length = sum(len(c.text) for c in chunks) / len(chunks)
-                logger.info("  Average chunk length: %.0f characters", avg_length)
-                logger.info("  Min/max length: %d/%d characters",
-                           min(len(c.text) for c in chunks),
-                           max(len(c.text) for c in chunks))
-            
-            return chunk_iterator
-        
+            chunker = DocumentChunker(self.chunk_size, self.chunk_overlap)
+            docs = [to_document(d) for d in documents]
+            chunks = list(chunker.split_all(docs))
         except Exception as e:
-            logger.error("✗ Chunking failed: %s", e)
+            logger.error("Chunking failed: %s", e)
             if not self.skip_errors:
                 raise
             return []
-    
-    def _stage_indexing(self, chunks: List[Chunk]) -> IndexResult:
-        """Run indexing stage."""
+
+        logger.info("Chunking complete: %d chunks", len(chunks))
+        if chunks:
+            lengths = [len(c.text) for c in chunks]
+            logger.info(
+                "Chunk length: avg %.0f, min %d, max %d",
+                sum(lengths) / len(lengths), min(lengths), max(lengths),
+            )
+        return chunks
+
+    def _stage_indexing(self, chunks: list[Chunk]) -> IndexResult:
         if not chunks:
-            logger.warning("⚠ No chunks to index")
-            return IndexResult(
-                vector_store_path="",
-                bm25_index_path="",
-                num_chunks=0,
-                dense_model=self.dense_model,
-                sparse_model=self.sparse_model,
-                bm25_stats={},
-                vector_stats={},
-            )
-        chunks_list = list(chunks) if not isinstance(chunks, list) else chunks
-        logger.info("Building indexes for %d chunks", len(chunks_list))
-        logger.info("Dense Embedding model: %s", self.dense_model)
-        
+            logger.warning("No chunks to index")
+            return self._empty_index_result()
+
+        logger.info(
+            "Indexing %d chunks (dense=%s, sparse=%s)",
+            len(chunks), self.dense_model, self.sparse_model,
+        )
         try:
-            index_config = IndexConfig(
-                dense_model=self.dense_model,
-                sparse_model=self.sparse_model
-                )
-            indexer = QdrantHybridRepository(self.qdrant_client,index_config)
-            index_result = indexer.add_chunks(chunks)
-            
-            logger.info("✓ Indexing complete")
-            logger.info("  Vector store: %s", index_result.vector_store_path)
-            logger.info("  BM25 index: %s", index_result.bm25_index_path)
-            logger.info("  Chunks indexed: %d", index_result.num_chunks)
-            
-            return index_result
-        
+            repo = QdrantHybridRepository(
+                self.qdrant_client,
+                IndexConfig(dense_model=self.dense_model, sparse_model=self.sparse_model),
+            )
+            repo.init_schema()
+            index_result = repo.add_chunks(chunks)
         except Exception as e:
-            logger.error("✗ Indexing failed: %s", e)
+            logger.error("Indexing failed: %s", e)
             if not self.skip_errors:
                 raise
-            return IndexResult(
-                vector_store_path="",
-                bm25_index_path="",
-                num_chunks=0,
-                embedding_model=self.embedding_model,
-                bm25_stats={},
-                vector_stats={}
-            )
-    
-    def _print_summary(self, result: PipelineResult):
-        """Print final summary."""
+            return self._empty_index_result()
+
+        logger.info("Indexing complete: %d chunks in %s", index_result.num_chunks, index_result.vector_store_path)
+        return index_result
+
+    def _empty_index_result(self) -> IndexResult:
+        return IndexResult(
+            vector_store_path="",
+            bm25_index_path="",
+            num_chunks=0,
+            dense_model=self.dense_model,
+            sparse_model=self.sparse_model,
+            bm25_stats={},
+            vector_stats={},
+        )
+
+    def _print_summary(self, result: PipelineResult) -> None:
         summary = result.summary()
-        
-        logger.info("")
-        logger.info("SUMMARY")
-        logger.info("-" * 80)
-        logger.info("Timestamp: %s", summary["timestamp"])
-        logger.info("Documents loaded: %d", summary["documents_loaded"])
-        logger.info("Total text: %d characters", summary["total_text_chars"])
-        logger.info("Chunks created: %d", summary["chunks_created"])
-        logger.info("Average chunk length: %.0f characters", summary["avg_chunk_length"])
-        logger.info("")
-        logger.info("Index Configuration:")
-        logger.info("  Embedding model: %s", summary["index_stats"]["embedding_model"])
-        logger.info("  Vector store: %s", summary["index_stats"]["vector_store"])
-        logger.info("")
-        logger.info("="*80)
-        logger.info("")
- 
- 
+        logger.info(
+            "Pipeline complete: %d documents, %d chunks, collection %s",
+            summary["documents_loaded"],
+            summary["chunks_created"],
+            summary["index_stats"]["vector_store"],
+        )
+
+
 def build_pipeline(
+    qdrant_url: str = "http://localhost:6333",
     raw_folder: str = "data/raw",
     processed_folder: str = "data/processed",
-    vector_store_path: str = "data/indexes",
     chunk_size: int = 384,
     chunk_overlap: int = 64,
     dense_model: str = "BAAI/bge-small-en-v1.5",
-    sparse_model: str = "Qdrant/bm25",   
-    skip_errors: bool = True
+    sparse_model: str = "Qdrant/bm25",
+    skip_errors: bool = True,
 ) -> IngestionOrchestrator:
-    """
-    Factory function to create and configure the pipeline orchestrator.
-    
-    Args:
-        raw_folder: Where source documents are stored
-        processed_folder: Where to save processed outputs
-        vector_store_path: Where to save vector and keyword indexes
-        chunk_size: Target size for document chunks
-        overlap: Overlap between consecutive chunks
-        embedding_model: Transformer model for embeddings
-        skip_errors: Continue on errors vs fail fast
-    
-    Returns:
-        Configured IngestionOrchestrator ready to run
-    
-    Example:
-        pipeline = build_pipeline(
-            chunk_size=384,
-            dense_model="BAAI/bge-small-en-v1.5",
-            sparse_model="Qdrant/bm25"
-        )
-        result = pipeline.run()
-        print(f"Indexed {result.index.num_chunks} chunks")
-    """
     return IngestionOrchestrator(
-        qdrant_client=QdrantClient(url="http://localhost:6333"),
+        qdrant_client=QdrantClient(url=qdrant_url),
         raw_folder=Path(raw_folder),
         processed_folder=Path(processed_folder),
-        vector_store_path=Path(vector_store_path),
         chunk_size=chunk_size,
         chunk_overlap=chunk_overlap,
         dense_model=dense_model,
         sparse_model=sparse_model,
-        skip_errors=skip_errors
+        skip_errors=skip_errors,
     )
 
 
 if __name__ == "__main__":
-    pipeline = build_pipeline()
-    pipeline.run()
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
+    build_pipeline().run()
