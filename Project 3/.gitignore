@@ -1,0 +1,16 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.hypothesis/
+
+# Sandbox runtime state (recreated by sandbox.manager)
+sandbox/workspaces/
+sandbox/remotes/
+sandbox/prs/
+*.sqlite
+*.sqlite-*
+
+# Generated eval output (results tables are copied into the README)
+eval/results/traces/
