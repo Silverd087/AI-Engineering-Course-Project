@@ -30,8 +30,11 @@ class MetadataExtractor:
         "prerequisites": "regulation",
     }
     
-    # Valid course code prefixes
-    COURSE_CODE_PATTERN = r'^[A-Z]{2,3}\d{3,}$'
+    # Valid course code prefixes. Matched against the raw stem (not a hyphen-split
+    # part) and allows a space between letters and digits, since some filenames use
+    # "CS434 -SYLLABUS-F24" or "ENG 101-SYLLABUS-F24" instead of a clean hyphen, and
+    # some department codes (MATH, PHYS, CHEM) are 4 letters, not 2-3.
+    COURSE_CODE_PATTERN = re.compile(r'^([A-Z]{2,4})\s*(\d{3,})')
     
     @staticmethod
     def extract_from_filename(
@@ -67,9 +70,11 @@ class MetadataExtractor:
         logger.debug(f"Extracting metadata from: {stem}")
         logger.debug(f"  Parts: {parts}")
         
-        # Try to identify course code (first part, e.g., "CS434")
-        if len(parts) >= 1 and re.match(MetadataExtractor.COURSE_CODE_PATTERN, parts[0]):
-            course_code = parts[0]
+        # Try to identify course code at the start of the raw stem (not parts[0],
+        # since the code and the rest of the filename aren't always hyphen-separated)
+        code_match = MetadataExtractor.COURSE_CODE_PATTERN.match(stem.strip())
+        if code_match:
+            course_code = code_match.group(1) + code_match.group(2)
             logger.debug(f"  Found course code: {course_code}")
         
         # Identify document type (second part or later, e.g., "SYLLABUS", "EXAM", "RULES")

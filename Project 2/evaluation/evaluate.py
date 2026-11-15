@@ -10,10 +10,12 @@ from qdrant_client import QdrantClient
 from evaluation.metrics import first_relevant_rank, hit_at_k, mrr, percentile
 from indexing.config import IndexConfig
 from indexing.repository import QdrantHybridRepository
+from retrieval.reranker import CrossEncoderReranker
 from retrieval.retriever import HybridRetriever
 
-MODES = ("dense", "sparse", "hybrid")
+MODES = ("dense", "sparse", "hybrid", "hybrid+reranker")
 KS = (1, 3, 5)
+RERANK_CANDIDATES = 15
 
 
 def load_questions(path: Path) -> list[dict]:
@@ -32,11 +34,16 @@ def run_mode(
     questions: list[dict],
     mode: str,
     k: int,
+    reranker: CrossEncoderReranker | None = None,
 ) -> list[dict]:
     rows = []
     for q in questions:
         start = time.perf_counter()
-        hits = retriever.retrieve(q["question"], mode=mode, k=k)
+        if reranker is not None:
+            candidates = retriever.retrieve(q["question"], mode="hybrid", k=RERANK_CANDIDATES)
+            hits = reranker.rerank(q["question"], candidates, top_k=k)
+        else:
+            hits = retriever.retrieve(q["question"], mode=mode, k=k)
         latency_ms = (time.perf_counter() - start) * 1000
 
         retrieved_ids = [h.payload["chunk_id"] for h in hits]
@@ -89,11 +96,13 @@ def main() -> None:
             config=IndexConfig(),
         )
     )
+    reranker = CrossEncoderReranker()
 
     args.out.mkdir(parents=True, exist_ok=True)
     table: dict[str, dict] = {}
     for mode in MODES:
-        rows = run_mode(retriever, retrieval_questions, mode, args.k)
+        use_reranker = reranker if mode == "hybrid+reranker" else None
+        rows = run_mode(retriever, retrieval_questions, mode, args.k, reranker=use_reranker)
         summary = summarize(rows)
         table[mode] = summary
         (args.out / f"{mode}.json").write_text(
@@ -101,10 +110,10 @@ def main() -> None:
             encoding="utf-8",
         )
 
-    print(f"{'mode':<8} {'hit@1':>6} {'hit@3':>6} {'hit@5':>6} {'mrr':>6} {'p50ms':>8} {'p95ms':>8}")
+    print(f"{'mode':<16} {'hit@1':>6} {'hit@3':>6} {'hit@5':>6} {'mrr':>6} {'p50ms':>8} {'p95ms':>8}")
     for mode, s in table.items():
         print(
-            f"{mode:<8} {s['hit@1']:>6} {s['hit@3']:>6} {s['hit@5']:>6} "
+            f"{mode:<16} {s['hit@1']:>6} {s['hit@3']:>6} {s['hit@5']:>6} "
             f"{s['mrr']:>6} {s['retrieval_p50_ms']:>8} {s['retrieval_p95_ms']:>8}"
         )
 

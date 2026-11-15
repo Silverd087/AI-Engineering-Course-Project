@@ -61,7 +61,13 @@ class WordParser(DocumentParser):
                     tables_text.append("\n".join(table_text))
             
             full_text = "\n".join(text_parts)
-            
+            if tables_text:
+                # Tables (grading breakdowns, schedules, rubrics) are extracted above but
+                # were never joined into the document text, so none of their content was
+                # ever chunked, embedded, or searchable. Appending them here is what makes
+                # e.g. "what's the grade breakdown for X" answerable at all.
+                full_text += "\n\n" + "\n\n".join(tables_text)
+
             logger.info(f"  ✓ Extracted {len(full_text)} characters")
             logger.info(f"    Paragraphs: {len(doc.paragraphs)}, Tables: {len(doc.tables)}")
             

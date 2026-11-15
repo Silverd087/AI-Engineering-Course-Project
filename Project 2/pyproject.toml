@@ -9,6 +9,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "fastapi>=0.162.2",
     "fastembed>=0.9.1",
     "httpx>=0.28.1",
     "pymupdf>=1.28.2",
@@ -16,8 +17,13 @@ dependencies = [
     "python-docx>=1.2.0",
     "python-dotenv>=1.2.4",
     "qdrant-client>=1.20.0",
+    "sentence-transformers>=6.2.0",
     "tiktoken>=0.14.0",
+    "uvicorn[standard]>=0.54.0",
 ]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/core", "src/orchestrator"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

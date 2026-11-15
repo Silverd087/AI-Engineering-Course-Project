@@ -1,7 +1,15 @@
-from dataclasses import dataclass,field
+import re
+from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Optional, List
-from uuid import uuid4
- 
+
+
+def _slug(source_path: str) -> str:
+    """Filesystem-stable id for a document, derived from its file stem."""
+    stem = Path(source_path).stem
+    return re.sub(r"[^a-zA-Z0-9]+", "-", stem).strip("-").lower() or "doc"
+
+
 @dataclass
 class DocumentMetadata:
     """
@@ -45,8 +53,16 @@ class ParsedDocument:
     text: str                           # Full extracted text
     sections: List[tuple]               # List of (heading, content) tuples
     tables: List[str]                   # List of extracted tables (as text)
-    doc_id: Optional[str] = field(default_factory=lambda: str(uuid4()))
-    
+    doc_id: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        # Deterministic, stable across ingestion runs: downstream chunk_ids
+        # (f"{doc_id}::{chunk_idx}") and Qdrant point ids are derived from this,
+        # so a random id here would orphan old points and invalidate any eval
+        # set that pins relevant_chunk_ids on every re-ingest.
+        if not self.doc_id:
+            self.doc_id = _slug(self.metadata.source_path)
+
     def summary(self) -> dict:
         """Return a summary of the document."""
         return {

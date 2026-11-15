@@ -6,7 +6,7 @@ import hashlib
 from dataclasses import dataclass, field
 from typing import Dict, Any, List
 
-from src.ingest import ParsedDocument
+from ingest import ParsedDocument
 
 @dataclass(frozen=True)
 class Document:
@@ -66,6 +66,6 @@ class PipelineResult:
             "index_stats": {
                 "vector_store": self.index.vector_store_path,
                 "num_chunks": self.index.num_chunks,
-                "embedding_model": self.index.embedding_model,
+                "dense_embedding_model": self.index.dense_model,
             }
         }

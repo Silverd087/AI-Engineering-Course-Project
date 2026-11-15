@@ -7,7 +7,9 @@ from types import SimpleNamespace
 
 from generation.answerer import Answerer
 from generation.llm import OpenAIClient
+from dotenv import load_dotenv
 
+load_dotenv()
 
 def make_hit(chunk_id: str, text: str, score: float) -> SimpleNamespace:
     return SimpleNamespace(
@@ -40,7 +42,7 @@ for question in QUESTIONS:
     print("=" * 60)
     print("Q:", question)
     print("A:", answer.text)
-    print("cited:", answer.cited_numbers, "| said_idk:", answer.said_idk)
+    print("cited:", answer.cited_numbers, "| sources:",answer.sources, "| said_idk:", answer.said_idk)
     print(
         "tokens in/out:", answer.input_tokens, answer.output_tokens,
         "| llm ms:", answer.llm_latency_ms,

@@ -1,0 +1,1021 @@
+[
+  {
+    "question": "What are the prerequisites for COM205?",
+    "answerable": true,
+    "answer": "English placement test.",
+    "relevant_chunk_ids": [
+      "com205-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nEnglish placement test",
+    "category": "prerequisites"
+  },
+  {
+    "question": "How much of the COM205 grade is the E-portfolio worth?",
+    "answerable": true,
+    "answer": "20% of the overall grade.",
+    "relevant_chunk_ids": [
+      "com205-syllabus-f24::1"
+    ],
+    "source_passage": "The E-portfolio is worth 20% of the overall grade.",
+    "category": "grading"
+  },
+  {
+    "question": "What is the prerequisite for COM307?",
+    "answerable": true,
+    "answer": "Effective Technical Writing.",
+    "relevant_chunk_ids": [
+      "com307-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nEffective Technical Writing",
+    "category": "prerequisites"
+  },
+  {
+    "question": "How long should a student's speech be in COM307?",
+    "answerable": true,
+    "answer": "Five to seven minutes.",
+    "relevant_chunk_ids": [
+      "com307-syllabus-f24::0",
+      "com307-syllabus-f24::1"
+    ],
+    "source_passage": "Each student will give a speech for five to seven minutes.",
+    "category": "course-content"
+  },
+  {
+    "question": "What are the prerequisites for CS101?",
+    "answerable": true,
+    "answer": "None.",
+    "relevant_chunk_ids": [
+      "cs101-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nNone.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What topics does CS101 cover?",
+    "answerable": true,
+    "answer": "Simple algorithms, statements, expressions, functions, parameter passing, iterations, recursion, and single and multidimensional arrays.",
+    "relevant_chunk_ids": [
+      "cs101-syllabus-f24::0"
+    ],
+    "source_passage": "Topics include: simple algorithms, statements, expressions, functions, parameter passing, iterations, recursion, and single and multidimensional arrays.",
+    "category": "course-content"
+  },
+  {
+    "question": "What is the prerequisite for CS303?",
+    "answerable": true,
+    "answer": "CS101 Introduction to Programming.",
+    "relevant_chunk_ids": [
+      "cs303-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nCS101 Introduction to programming.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What does the CS303 course introduce students to?",
+    "answerable": true,
+    "answer": "The Unix programming environment, including command line utilities, files, processes, memory management, system calls, and concurrency.",
+    "relevant_chunk_ids": [
+      "cs303-syllabus-f24::0",
+      "cs303-syllabus-f24::1"
+    ],
+    "source_passage": "This course introduces students to the Unix programming environment where they will explore various command line utilities, files, processes, memory management, system calls, and concurrency.",
+    "category": "course-content"
+  },
+  {
+    "question": "What is the prerequisite for CS324?",
+    "answerable": true,
+    "answer": "CS102 Object Oriented Programming.",
+    "relevant_chunk_ids": [
+      "cs324-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nCS102- Object Oriented programming",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What languages does CS324 teach students to code in?",
+    "answerable": true,
+    "answer": "HTML5, CSS3, and JavaScript.",
+    "relevant_chunk_ids": [
+      "cs324-syllabus-f24::0"
+    ],
+    "source_passage": "Learn how to write code in HTML5, CSS3, JavaScript and develop APIs following the best practices suggested by developers.",
+    "category": "course-content"
+  },
+  {
+    "question": "What are the prerequisites for CS331?",
+    "answerable": true,
+    "answer": "None.",
+    "relevant_chunk_ids": [
+      "cs331-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nNone",
+    "category": "prerequisites"
+  },
+  {
+    "question": "Which NoSQL databases does CS331 teach students to use?",
+    "answerable": true,
+    "answer": "Cassandra, MongoDB and Neo4J.",
+    "relevant_chunk_ids": [
+      "cs331-syllabus-f24::0"
+    ],
+    "source_passage": "use NOSQL databases like Cassandra, MongoDB and Neo4J, to store and process non-relational data",
+    "category": "course-content"
+  },
+  {
+    "question": "What is the prerequisite for CS341?",
+    "answerable": true,
+    "answer": "CS102 Object-Oriented Programming.",
+    "relevant_chunk_ids": [
+      "cs341-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nCS102 Object-Oriented Programming.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What is CS341's policy on using generative AI tools?",
+    "answerable": true,
+    "answer": "Moderate Gen AI use: students must not use Gen AI tools during in-class examinations or assignments unless explicitly permitted, and must cite any Gen AI tool used, per the instructor's required citation style (MLA/APA/Chicago). Use outside those parameters counts as plagiarism/fabrication and a violation of SMU Academic Integrity.",
+    "relevant_chunk_ids": [
+      "cs341-syllabus-f24::0",
+      "cs341-syllabus-f24::1"
+    ],
+    "source_passage": "Students MUST not use gen AI tools during in-class examinations, or assignments unless explicitly permitted and instructed.",
+    "category": "policy"
+  },
+  {
+    "question": "What are the prerequisites for CS411?",
+    "answerable": true,
+    "answer": "None.",
+    "relevant_chunk_ids": [
+      "cs411-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nNone.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What application layer protocols does CS411 cover?",
+    "answerable": true,
+    "answer": "HTTP, DNS, and Email.",
+    "relevant_chunk_ids": [
+      "cs411-syllabus-f24::0",
+      "cs411-syllabus-f24::1"
+    ],
+    "source_passage": "The course mainly covers application layer protocols (HTTP, DNS, Email,), client-server architectures, internet protocols, local and wide area networks, link layers and wireless networks.",
+    "category": "course-content"
+  },
+  {
+    "question": "What is the prerequisite for CS412?",
+    "answerable": true,
+    "answer": "CS411 Computer Networks.",
+    "relevant_chunk_ids": [
+      "cs412-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nCS411 Computer Networks.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What does CS412 cover related to cryptography?",
+    "answerable": true,
+    "answer": "An introduction to cryptography, including the basics of cryptographic algorithms and encryption forms.",
+    "relevant_chunk_ids": [
+      "cs412-syllabus-f24::0",
+      "cs412-syllabus-f24::1"
+    ],
+    "source_passage": "The course also covers an introduction to cryptography including the basics of cryptographic algorithms and encryption forms.",
+    "category": "course-content"
+  },
+  {
+    "question": "What are the prerequisites for CS420?",
+    "answerable": true,
+    "answer": "CS341 Algorithms and Data Structure, and CS101 Introduction to Programming.",
+    "relevant_chunk_ids": [
+      "cs420-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nCS341 Algorithms and Data Structure, CS101 Introduction to Programming",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What parsing techniques are covered in CS420?",
+    "answerable": true,
+    "answer": "Top-Down Parsing, Bottom-Up Parsing, LR and SLR Parsing, and LALR Parsing.",
+    "relevant_chunk_ids": [
+      "cs420-syllabus-f24::0",
+      "cs420-syllabus-f24::1"
+    ],
+    "source_passage": "- Top-Down Parsing\n- Bottom-Up Parsing\n- LR and SLR Parsing\n- LALR Parsing",
+    "category": "course-content"
+  },
+  {
+    "question": "What is the prerequisite for CS421?",
+    "answerable": true,
+    "answer": "CS321 Introduction to Software Engineering.",
+    "relevant_chunk_ids": [
+      "cs421-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nCS321 Introduction to Software Engineering.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What does the second part of CS421 focus on?",
+    "answerable": true,
+    "answer": "Usability aspects, integrating requirements with design-oriented, user-centric requirements gathered via interviews and personas.",
+    "relevant_chunk_ids": [
+      "cs421-syllabus-f24::1"
+    ],
+    "source_passage": "The second part of the course focuses on usability aspects. The course focuses on integrating the requirements gathered in the first part with more design-oriented requirements gathered as part of a user-centric design process",
+    "category": "course-content"
+  },
+  {
+    "question": "What is the prerequisite for CS422?",
+    "answerable": true,
+    "answer": "CS321 Introduction to Software Engineering.",
+    "relevant_chunk_ids": [
+      "cs422-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nCS321 Introduction to Software Engineering.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What UML diagram types are used in CS422?",
+    "answerable": true,
+    "answer": "Use case diagrams, class diagrams, sequence diagrams, and state diagrams.",
+    "relevant_chunk_ids": [
+      "cs422-syllabus-f24::0"
+    ],
+    "source_passage": "Analysis and design models are expressed using UML models such as use case diagrams, class diagram, sequence diagrams, and state diagrams.",
+    "category": "course-content"
+  },
+  {
+    "question": "What is the prerequisite for CS429?",
+    "answerable": true,
+    "answer": "CS321 Introduction to Software Engineering.",
+    "relevant_chunk_ids": [
+      "cs429-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nCS 321 Introduction to Software Engineering.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "How many credits is CS429?",
+    "answerable": true,
+    "answer": "3 Credits / 3 Hours.",
+    "relevant_chunk_ids": [
+      "cs429-syllabus-f24::0"
+    ],
+    "source_passage": "CS429 SOFTWARE DEVELOPMENT METHODOLOGIES\n3 Credits / 3 Hours",
+    "category": "credits"
+  },
+  {
+    "question": "What is the grade breakdown for CS429?",
+    "answerable": true,
+    "answer": "20% Quizzes, 15% Homework, 25% Mid-Term, 40% Final.",
+    "relevant_chunk_ids": [
+      "cs429-syllabus-f24::2"
+    ],
+    "source_passage": "20% Quizzes \n15% Homework \n25% Mid-Term \n40% Final",
+    "category": "grading"
+  },
+  {
+    "question": "Who is the lecturer for CS429 in Fall 2024?",
+    "answerable": true,
+    "answer": "Asma Amdouni.",
+    "relevant_chunk_ids": [
+      "cs429-syllabus-f24::3"
+    ],
+    "source_passage": "Course Lecturer\nAsma Amdouni",
+    "category": "instructor"
+  },
+  {
+    "question": "What is the prerequisite for CS434 in Fall 2026?",
+    "answerable": true,
+    "answer": "CS280 Introduction to Artificial Intelligence.",
+    "relevant_chunk_ids": [
+      "cs434-syllabus-f26::0"
+    ],
+    "source_passage": "Prerequisites\nCS280 Introduction to Artificial Intelligence",
+    "category": "prerequisites"
+  },
+  {
+    "question": "How many credits is CS434?",
+    "answerable": true,
+    "answer": "4 Credits / 4 Hours.",
+    "relevant_chunk_ids": [
+      "cs434-syllabus-f26::0"
+    ],
+    "source_passage": "CS434 DATA SCIENCE\n4 Credits / 4 Hours",
+    "category": "credits"
+  },
+  {
+    "question": "What is the grade breakdown for CS434 in Fall 2026?",
+    "answerable": true,
+    "answer": "15% Quizzes & assignments, 20% Final Project, 25% Mid-Term, 35% Final.",
+    "relevant_chunk_ids": [
+      "cs434-syllabus-f26::2"
+    ],
+    "source_passage": "15% Quizzes & assignments 20 % Final Project\n25% Mid-Term  35% Final",
+    "category": "grading"
+  },
+  {
+    "question": "Which programmes require CS434?",
+    "answerable": true,
+    "answer": "CSE, SWE, and REE.",
+    "relevant_chunk_ids": [
+      "cs434-syllabus-f26::0"
+    ],
+    "source_passage": "CSE, SWE, REE | Required",
+    "category": "programme"
+  },
+  {
+    "question": "What is the prerequisite for the CS434 syllabus confirmed in 2018 (data mining version)?",
+    "answerable": true,
+    "answer": "MATH244 Probability and Statistics.",
+    "relevant_chunk_ids": [
+      "cs434-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nMATH244 Probability and Statistics",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What are the prerequisites for CS441?",
+    "answerable": true,
+    "answer": "CS341 Data Structures and Algorithms, MATH348 Graph Theory, and MATH244 Probability and Statistics.",
+    "relevant_chunk_ids": [
+      "cs441-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nCS341 Data Structures and Algorithms, MATH348 Graph Theory, MATH244 Probability and Statistics",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What mathematical model does CS441 use to reason about computation limits?",
+    "answerable": true,
+    "answer": "The Turing Machine.",
+    "relevant_chunk_ids": [
+      "cs441-syllabus-f24::0"
+    ],
+    "source_passage": "the course focuses on mathematical tools and models such as the Turing Machine that allow to reason precisely on the intrinsic powers and limitations of computation.",
+    "category": "course-content"
+  },
+  {
+    "question": "What are the main topics covered in CS453?",
+    "answerable": true,
+    "answer": "Distributed, virtualized and pervasive systems, cloud computing concepts, IaaS/PaaS/public/private/hybrid cloud architecture, and security/privacy/interoperability issues in cloud and pervasive computing.",
+    "relevant_chunk_ids": [
+      "cs453-syllabus-f24::0",
+      "cs453-syllabus-f24::1"
+    ],
+    "source_passage": "propose architecture and infrastructure of cloud computing, including, PaaS, IaaS, public cloud, private cloud, and hybrid cloud",
+    "category": "course-content"
+  },
+  {
+    "question": "Who is CS453's course evaluation literature author?",
+    "answerable": true,
+    "answer": "Dan C. Marinescu (Cloud computing: theory and practice, 2022).",
+    "relevant_chunk_ids": [
+      "cs453-syllabus-f24::2"
+    ],
+    "source_passage": "Marinescu, D.C., 2022. Cloud computing: theory and practice. Morgan Kaufmann.",
+    "category": "literature"
+  },
+  {
+    "question": "What are the prerequisites for CS485?",
+    "answerable": true,
+    "answer": "MATH244 Probability and Statistics and CS341 Data Structure and Algorithms.",
+    "relevant_chunk_ids": [
+      "cs485-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nMATH244 Probability and Statistics, CS341 Data Structure and Algorithms.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What AI search algorithm types does CS485 describe?",
+    "answerable": true,
+    "answer": "Uninformed, informed, heuristic, constraint satisfaction, and genetic algorithms.",
+    "relevant_chunk_ids": [
+      "cs485-syllabus-f24::0"
+    ],
+    "source_passage": "describe various AI search algorithms (uninformed, informed, heuristic, constraint satisfaction, genetic algorithms)",
+    "category": "course-content"
+  },
+  {
+    "question": "What is the prerequisite for CS495?",
+    "answerable": true,
+    "answer": "CS485 Artificial Intelligence.",
+    "relevant_chunk_ids": [
+      "cs495-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nCS485 Artificial Intelligence",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What network architectures does CS495 cover?",
+    "answerable": true,
+    "answer": "Feedforward networks, convolutional networks, recurrent and recursive networks, and Transformer models.",
+    "relevant_chunk_ids": [
+      "cs495-syllabus-f24::1"
+    ],
+    "source_passage": "The course covers feedforward networks, network back propagation",
+    "category": "course-content"
+  },
+  {
+    "question": "What techniques does ECE143 teach for simplifying Boolean expressions?",
+    "answerable": true,
+    "answer": "Basic Boolean postulates and K-maps (Karnaugh maps).",
+    "relevant_chunk_ids": [
+      "ece143-syllabus-f24::0"
+    ],
+    "source_passage": "different techniques to simplify Boolean expressions are presented, such as basic Boolean postulates and K-maps.",
+    "category": "course-content"
+  },
+  {
+    "question": "What are the prerequisites for ECE355?",
+    "answerable": true,
+    "answer": "CS261 Computer Organization and Design and CS102 Object Oriented Programming.",
+    "relevant_chunk_ids": [
+      "ece355-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nCS261 Computer Organization and Design & CS102 Object Oriented Programming",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What microcontroller architecture does ECE355 highlight?",
+    "answerable": true,
+    "answer": "ARM Cortex.",
+    "relevant_chunk_ids": [
+      "ece355-syllabus-f24::0"
+    ],
+    "source_passage": "Elaborate on the internal architecture and functionalities of popular microcontroller architectures such as ARM Cortex",
+    "category": "course-content"
+  },
+  {
+    "question": "What are the prerequisites for ECE360?",
+    "answerable": true,
+    "answer": "PHYS151 Classical Mechanics and ECE251 Electrical Circuits.",
+    "relevant_chunk_ids": [
+      "ece360-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nPHYS151 Classical Mechanics, ECE251 Electrical Circuits.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What is ECE360's Gen AI policy?",
+    "answerable": true,
+    "answer": "Strict: every element of graded assignments must be fully prepared by the student, and any use of generative AI tools for any part of the assigned work is considered plagiarism and a violation of SMU Academic Integrity.",
+    "relevant_chunk_ids": [
+      "ece360-syllabus-f24::1"
+    ],
+    "source_passage": "Strict Gen AI use \nIn this course ECE360, every element of graded (class) assignments given by the instructor must be fully prepared by the student.",
+    "category": "policy"
+  },
+  {
+    "question": "What is the prerequisite for ECE371?",
+    "answerable": true,
+    "answer": "ECE251 Electrical circuits.",
+    "relevant_chunk_ids": [
+      "ece371-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nECE251 Electrical circuits.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What mathematical transforms does ECE371 use for signal analysis?",
+    "answerable": true,
+    "answer": "Fourier, Laplace, and Z transform.",
+    "relevant_chunk_ids": [
+      "ece371-syllabus-f24::0"
+    ],
+    "source_passage": "presenting the mathematical techniques used for signal and system analysis (Fourier, Laplace, Z transform).",
+    "category": "course-content"
+  },
+  {
+    "question": "What are the prerequisites for ECE443?",
+    "answerable": true,
+    "answer": "ECE143 Digital Systems and CS101 Introduction to Programming.",
+    "relevant_chunk_ids": [
+      "ece443-syllabus-f23::0"
+    ],
+    "source_passage": "Prerequisites\nECE143 Digital Systems, CS101 Introduction to Programming.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What are the prerequisites for ECO171?",
+    "answerable": true,
+    "answer": "None.",
+    "relevant_chunk_ids": [
+      "eco171-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nNone.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What three economic agents does ECO171 study?",
+    "answerable": true,
+    "answer": "Consumers, firms, and the government.",
+    "relevant_chunk_ids": [
+      "eco171-syllabus-f24::1"
+    ],
+    "source_passage": "we consider the actions and the interactions of three economic agents: 1) the consumers, 2) the firms, and 3) the government.",
+    "category": "course-content"
+  },
+  {
+    "question": "What are the prerequisites for GOV101?",
+    "answerable": true,
+    "answer": "None.",
+    "relevant_chunk_ids": [
+      "gov101-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nNone.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What are the three main parts of GOV101?",
+    "answerable": true,
+    "answer": "Democratic theory, democratic governance in practice, and citizenship.",
+    "relevant_chunk_ids": [
+      "gov101-syllabus-f24::1"
+    ],
+    "source_passage": "Democratic theory: origins of democracy, the social contract, constitutional democracy, representation, liberal democracy",
+    "category": "course-content"
+  },
+  {
+    "question": "What is the prerequisite for ISS497?",
+    "answerable": true,
+    "answer": "COM307 Effective Technical Communication.",
+    "relevant_chunk_ids": [
+      "iss497-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nCOM307 Effective Technical Communication.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What structure does ISS497 teach for organizing scientific publications?",
+    "answerable": true,
+    "answer": "The IMRAD structure.",
+    "relevant_chunk_ids": [
+      "iss497-syllabus-f24::0"
+    ],
+    "source_passage": "explain how to organize scientific publications and professional investigations, following the IMRAD structure",
+    "category": "course-content"
+  },
+  {
+    "question": "What are the prerequisites for ME310?",
+    "answerable": true,
+    "answer": "PHYS151 Classical Mechanics and CHEM161 Chemistry I.",
+    "relevant_chunk_ids": [
+      "me310-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nPHYS151 Classical Mechanics, CHEM161 Chemistry I.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "Which programme requires ME310?",
+    "answerable": true,
+    "answer": "REE (Renewable Energy Engineering).",
+    "relevant_chunk_ids": [
+      "me310-syllabus-f24::0"
+    ],
+    "source_passage": "REE | Required",
+    "category": "programme"
+  },
+  {
+    "question": "What are the prerequisites for ME320?",
+    "answerable": true,
+    "answer": "MATH341 Differential Equations and MATH342 Multivariable Calculus.",
+    "relevant_chunk_ids": [
+      "me320-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nMATH341 Differential Equations, MATH342 Multivariable Calculus.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What engineering applications does ME320 discuss for fluid mechanics?",
+    "answerable": true,
+    "answer": "Dams, manometers, and pipe flows.",
+    "relevant_chunk_ids": [
+      "me320-syllabus-f24::0"
+    ],
+    "source_passage": "Several engineering applications are discussed throughout the course such as dams, manometers, and particularly pipe flows.",
+    "category": "course-content"
+  },
+  {
+    "question": "What are the prerequisites for RE310?",
+    "answerable": true,
+    "answer": "CHEM161 Chemistry and CHEM262.",
+    "relevant_chunk_ids": [
+      "re310-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nCHEM161 chemistry, CHEM 262",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What generations of biofuels does RE310 cover?",
+    "answerable": true,
+    "answer": "1st, 2nd and 3rd generation biofuels.",
+    "relevant_chunk_ids": [
+      "re310-syllabus-f24::0"
+    ],
+    "source_passage": "outline major developments in 1st, 2nd and the 3rd generation biofuels",
+    "category": "course-content"
+  },
+  {
+    "question": "What is the prerequisite for RE450?",
+    "answerable": true,
+    "answer": "ECE360 Electrical power systems.",
+    "relevant_chunk_ids": [
+      "re450-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nECE360 Electrical power systems,",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What two solar energy technologies does RE450 cover?",
+    "answerable": true,
+    "answer": "Photovoltaic cells and solar thermal systems.",
+    "relevant_chunk_ids": [
+      "re450-syllabus-f24::0"
+    ],
+    "source_passage": "This course introduces the fundamental concepts of solar Energy systems (photovoltaics cells and solar thermal systems).",
+    "category": "course-content"
+  },
+  {
+    "question": "What are the prerequisites for RE461?",
+    "answerable": true,
+    "answer": "None.",
+    "relevant_chunk_ids": [
+      "re461-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nNone.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "Which programme requires RE461?",
+    "answerable": true,
+    "answer": "REE (Renewable Energy Engineering).",
+    "relevant_chunk_ids": [
+      "re461-syllabus-f24::0"
+    ],
+    "source_passage": "REE| Required",
+    "category": "programme"
+  },
+  {
+    "question": "What are the prerequisites for CHEM161?",
+    "answerable": true,
+    "answer": "None.",
+    "relevant_chunk_ids": [
+      "chem161-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nNone",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What phenomena related to light does CHEM161 cover?",
+    "answerable": true,
+    "answer": "Electron configuration, wave-particle duality, and the photoelectric effect, used to explain atomic light emission and the fundamentals of solar cells.",
+    "relevant_chunk_ids": [
+      "chem161-syllabus-f24::0"
+    ],
+    "source_passage": "use electron configuration, wave-particle duality, and photoelectric effect to explain atom",
+    "category": "course-content"
+  },
+  {
+    "question": "What is the prerequisite for ENG 101?",
+    "answerable": true,
+    "answer": "English placement test.",
+    "relevant_chunk_ids": [
+      "eng-101-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nEnglish placement test",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What is ENG101's Gen AI policy?",
+    "answerable": true,
+    "answer": "Every element of graded assignments must be fully prepared by the student; using generative AI tools for any part of the assigned work is considered plagiarism and a violation of SMU Academic Integrity.",
+    "relevant_chunk_ids": [
+      "eng-101-syllabus-f24::1"
+    ],
+    "source_passage": "In ENG 101, every element of graded (class) assignments given by the instructor must be fully prepared by the student.",
+    "category": "policy"
+  },
+  {
+    "question": "What is the prerequisite for ENG 111?",
+    "answerable": true,
+    "answer": "English placement test or Prep English ENG101.",
+    "relevant_chunk_ids": [
+      "eng-111-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nEnglish placement test or Prep English ENG101",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What is the grade breakdown for ENG 111?",
+    "answerable": true,
+    "answer": "Participation 10%, Oral Presentation 10%, APA Quiz 10%, Midterm exam 30%, Final exam 40%.",
+    "relevant_chunk_ids": [
+      "eng-111-syllabus-f24::2",
+      "eng-111-syllabus-f24::3"
+    ],
+    "source_passage": "Participation: 10%\nAssignment I: Oral Presentation: 10%\nAssignment II: APA Quiz: 10%\nMidterm exam: 30%\nFinal exam: 40%",
+    "category": "grading"
+  },
+  {
+    "question": "What are the prerequisites for MATH140?",
+    "answerable": true,
+    "answer": "None.",
+    "relevant_chunk_ids": [
+      "math140-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nNone.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What course does MATH140 prepare students for?",
+    "answerable": true,
+    "answer": "MATH141 Calculus I.",
+    "relevant_chunk_ids": [
+      "math140-syllabus-f24::0"
+    ],
+    "source_passage": "This is a course designed to prepare students for MATH141 Calculus I.",
+    "category": "course-content"
+  },
+  {
+    "question": "What are the prerequisites for MATH141?",
+    "answerable": true,
+    "answer": "None.",
+    "relevant_chunk_ids": [
+      "math141-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nNone.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What theorem does MATH141 use to evaluate definite integrals?",
+    "answerable": true,
+    "answer": "The Fundamental Theorem of Calculus.",
+    "relevant_chunk_ids": [
+      "math141-syllabus-f24::0"
+    ],
+    "source_passage": "Use the Fundamental Theorem of Calculus to evaluate definite integrals.",
+    "category": "course-content"
+  },
+  {
+    "question": "What are the prerequisites for MATH241?",
+    "answerable": true,
+    "answer": "None.",
+    "relevant_chunk_ids": [
+      "math241-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nNone.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What is MATH241's policy on generative AI tools?",
+    "answerable": true,
+    "answer": "Every element of graded assignments must be fully prepared by the student; using generative AI tools for any part of the assigned work is considered plagiarism and a violation of SMU Academic Integrity.",
+    "relevant_chunk_ids": [
+      "math241-syllabus-f24::1"
+    ],
+    "source_passage": "In this course, Linear Algebra, every element of graded assignments given by the instructor must be fully prepared by the student.",
+    "category": "policy"
+  },
+  {
+    "question": "What are the prerequisites for MATH244?",
+    "answerable": true,
+    "answer": "MATH141 Calculus 1 and MATH243 Discrete Mathematics.",
+    "relevant_chunk_ids": [
+      "math244-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nMATH141 Calculus 1, MATH243 Discrete Mathematics",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What probability distributions does MATH244 cover?",
+    "answerable": true,
+    "answer": "Binomial, geometrical, negative binomial, Pascal, normal and exponential distribution.",
+    "relevant_chunk_ids": [
+      "math244-syllabus-f24::0"
+    ],
+    "source_passage": "understand common distributions including binomial, geometrical, negative binomial, Pascal, normal and exponential distribution",
+    "category": "course-content"
+  },
+  {
+    "question": "What is the prerequisite for MATH348?",
+    "answerable": true,
+    "answer": "MATH243 Discrete Math (or equivalent) or CS341 Data Structures & Algorithms (or equivalent).",
+    "relevant_chunk_ids": [
+      "math348-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nMATH243 Discrete Math or equivalent CS341 Data Structures & Algorithms or equivalent.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "Name a famous problem covered in MATH348's graph theory course.",
+    "answerable": true,
+    "answer": "The Traveling Salesman Problem (one of several listed, e.g. Minimum Connector Problem, Four Color Problem, Marriage Problem).",
+    "relevant_chunk_ids": [
+      "math348-syllabus-f24::1"
+    ],
+    "source_passage": "Famous problems in Graph Theory include: the Traveling Salesman Problem (visiting a list of cities minimizing the traveled distance)",
+    "category": "course-content"
+  },
+  {
+    "question": "What are the prerequisites for PHYS151?",
+    "answerable": true,
+    "answer": "None.",
+    "relevant_chunk_ids": [
+      "phys151-syllabus-fl24::0"
+    ],
+    "source_passage": "Prerequisites: None.",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What conservation laws does PHYS151 use to analyze collisions?",
+    "answerable": true,
+    "answer": "Conservation of linear momentum and energy.",
+    "relevant_chunk_ids": [
+      "phys151-syllabus-fl24::0"
+    ],
+    "source_passage": "use the laws of conservation of linear momentum and energy to analyze collisions in 1D and 2D",
+    "category": "course-content"
+  },
+  {
+    "question": "What is the prerequisite for PHYS152?",
+    "answerable": true,
+    "answer": "PHYS151 Classical Mechanics.",
+    "relevant_chunk_ids": [
+      "phys152-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nPHYS151 Classical Mechanics",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What law does PHYS152 use to calculate magnetic fields from current distributions?",
+    "answerable": true,
+    "answer": "The Biot-Savart law.",
+    "relevant_chunk_ids": [
+      "phys152-syllabus-f24::0"
+    ],
+    "source_passage": "Use the Biot-Savart law to calculate the magnetic field due to various current distributions",
+    "category": "course-content"
+  },
+  {
+    "question": "What is the grade breakdown for CS101?",
+    "answerable": true,
+    "answer": "20% Quizzes + Coursera, 15% Lab Assignments, 25% Mid-Term, 40% Final.",
+    "relevant_chunk_ids": [
+      "cs101-syllabus-f24::1"
+    ],
+    "source_passage": "20% Quizzes + Coursera | 15% Lab Assignments | 25% Mid-Term | 40% Final",
+    "category": "grading"
+  },
+  {
+    "question": "What is the grade breakdown for CS331?",
+    "answerable": true,
+    "answer": "10% Quizzes, 10% Assignments, 20% Graded Labs, 20% Mid-Term, 40% Final.",
+    "relevant_chunk_ids": [
+      "cs331-syllabus-f24::1"
+    ],
+    "source_passage": "10% Quizzes | 10% Assignments | 20% Graded Labs | 20% Mid-Term | 40% Final",
+    "category": "grading"
+  },
+  {
+    "question": "What is the grade breakdown for ECE360?",
+    "answerable": true,
+    "answer": "15% Quizzes, 20% Lab Assignments, 25% Mid-Term, 40% Final.",
+    "relevant_chunk_ids": [
+      "ece360-syllabus-f24::2"
+    ],
+    "source_passage": "15% Quizzes | 20% Lab Assignments | 25% Mid-Term | 40% Final",
+    "category": "grading"
+  },
+  {
+    "question": "What is the grade breakdown for MATH244?",
+    "answerable": true,
+    "answer": "10% Quizzes, 20% Homeworks, 30% Mid-Term, 40% Final.",
+    "relevant_chunk_ids": [
+      "math244-syllabus-f24::1"
+    ],
+    "source_passage": "10% Quizzes | 20% Homeworks | 30% Mid-Term | 40% Final",
+    "category": "grading"
+  },
+  {
+    "question": "What is the grade breakdown for GOV101?",
+    "answerable": true,
+    "answer": "40% Essay, 20% Presentation, 40% Policy Brief.",
+    "relevant_chunk_ids": [
+      "gov101-syllabus-f24::3"
+    ],
+    "source_passage": "40% Essay | 20% Presentation | 40% Policy Brief",
+    "category": "grading"
+  },
+  {
+    "question": "What is the grade breakdown for RE450?",
+    "answerable": true,
+    "answer": "30% Practical work, 30% Mid-Term, 40% Final.",
+    "relevant_chunk_ids": [
+      "re450-syllabus-f24::2"
+    ],
+    "source_passage": "30% | Practical work | 30% | Mid-Term | 40% | Final",
+    "category": "grading"
+  },
+  {
+    "question": "Who teaches CS101 in Fall 2024?",
+    "answerable": true,
+    "answer": "Dr. Nadia Ben Youssef and Dr. Ghassen Kilani (course lecturers); Amine Ben Hassouna (lab instructor).",
+    "relevant_chunk_ids": [
+      "cs101-syllabus-f24::3"
+    ],
+    "source_passage": "Course Lecturer | Dr. Nadia Ben Youssef & Dr. Ghassen Kilani\nLab Instructor | Amine Ben Hassouna",
+    "category": "instructor"
+  },
+  {
+    "question": "Which courses list CS101 as a prerequisite?",
+    "answerable": true,
+    "answer": "CS303 (Unix programming environment) and ECE443 (Advanced Digital Design) both list CS101 Introduction to Programming as a prerequisite.",
+    "relevant_chunk_ids": [
+      "cs303-syllabus-f24::0",
+      "ece443-syllabus-f23::0"
+    ],
+    "source_passage": "CS303 prerequisites: 'CS101 Introduction to programming.' ECE443 prerequisites: 'ECE143 Digital Systems, CS101 Introduction to Programming.'",
+    "category": "cross-reference"
+  },
+  {
+    "question": "Which course must a student take before CS495 Deep Learning?",
+    "answerable": true,
+    "answer": "CS485 Artificial Intelligence.",
+    "relevant_chunk_ids": [
+      "cs495-syllabus-f24::0"
+    ],
+    "source_passage": "Prerequisites\nCS485 Artificial Intelligence",
+    "category": "prerequisites"
+  },
+  {
+    "question": "What is the late-submission policy for CS496 AI Engineering?",
+    "answerable": false,
+    "category": "unanswerable"
+  },
+  {
+    "question": "What is the tuition fee for the Fall 2026 semester?",
+    "answerable": false,
+    "category": "unanswerable"
+  },
+  {
+    "question": "How many credits is ECE251 Electrical Circuits worth?",
+    "answerable": false,
+    "category": "unanswerable"
+  },
+  {
+    "question": "What is the WiFi password for the MedTech campus?",
+    "answerable": false,
+    "category": "unanswerable"
+  },
+  {
+    "question": "What is the housing policy for international students?",
+    "answerable": false,
+    "category": "unanswerable"
+  },
+  {
+    "question": "What is the GPA requirement to avoid academic probation?",
+    "answerable": false,
+    "category": "unanswerable"
+  },
+  {
+    "question": "When is the registration deadline for Spring 2027?",
+    "answerable": false,
+    "category": "unanswerable"
+  },
+  {
+    "question": "What is the capital of Tunisia?",
+    "answerable": false,
+    "category": "unanswerable"
+  },
+  {
+    "question": "What is the late submission policy for assignments in COM307?",
+    "answerable": false,
+    "category": "unanswerable"
+  },
+  {
+    "question": "Can I retake CS434 if I fail it twice?",
+    "answerable": false,
+    "category": "unanswerable"
+  },
+  {
+    "question": "What is the process for appealing a grade at MedTech?",
+    "answerable": false,
+    "category": "unanswerable"
+  },
+  {
+    "question": "Does MedTech offer a minor in Data Science?",
+    "answerable": false,
+    "category": "unanswerable"
+  },
+  {
+    "question": "What is the office phone number for the CS department chair?",
+    "answerable": false,
+    "category": "unanswerable"
+  },
+  {
+    "question": "What scholarships are available for REE students?",
+    "answerable": false,
+    "category": "unanswerable"
+  }
+]

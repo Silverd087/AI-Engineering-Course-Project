@@ -57,6 +57,17 @@ class DocumentChunker:
             return vars(raw_metadata).copy()
         return {}
 
+    def _context_header(self, meta_dict: dict[str, Any]) -> str:
+        """Course code/title so each chunk is self-identifying for keyword and vector search.
+
+        Most syllabus bodies never mention their own course code (it only lives in
+        metadata), so without this a query like "prerequisites for CS495" has nothing
+        in the chunk text to match against.
+        """
+        parts = [meta_dict.get("course_code"), meta_dict.get("title")]
+        header = " - ".join(str(p) for p in parts if p)
+        return f"{header}\n" if header else ""
+
     def split_document(self, doc: Document) -> Iterator[Chunk]:
         # Safely extract metadata dictionary
         meta_dict = self._extract_metadata_dict(getattr(doc, "metadata", None))
@@ -74,6 +85,7 @@ class DocumentChunker:
         # Get text, supporting either .text or .content
         text = getattr(doc, "text", None) or getattr(doc, "content", "")
 
+        header = self._context_header(meta_dict)
         units = self._split_units(text)
         current_tokens: list[int] = []
         current_text = ""
@@ -86,7 +98,7 @@ class DocumentChunker:
                 if current_tokens:
                     yield Chunk(
                         chunk_id=f"{doc_id}::{chunk_idx}",
-                        text=current_text.strip(),
+                        text=header + current_text.strip(),
                         metadata={**meta_dict, "doc_id": doc_id, "chunk_index": chunk_idx},
                     )
                     chunk_idx += 1
@@ -100,7 +112,7 @@ class DocumentChunker:
         if current_tokens and current_text.strip():
             yield Chunk(
                 chunk_id=f"{doc_id}::{chunk_idx}",
-                text=current_text.strip(),
+                text=header + current_text.strip(),
                 metadata={**meta_dict, "doc_id": doc_id, "chunk_index": chunk_idx},
             )
 

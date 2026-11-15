@@ -117,3 +117,77 @@ class QdrantHybridRepository:
         ]
         self.client.upsert(collection_name=self.config.collection, points=points)
         return len(points)
+
+    def search(
+        self,
+        query: str,
+        mode: str = "hybrid",
+        k: int = 3,
+        query_filter: models.Filter | None = None,
+    ) -> list[models.ScoredPoint]:
+        """Search points in Qdrant using dense, sparse, or hybrid retrieval."""
+        mode = mode.lower()
+
+        if mode == DENSE:
+            dense_vector = next(iter(self.dense_embedder.embed([query]))).tolist()
+            response = self.client.query_points(
+                collection_name=self.config.collection,
+                query=dense_vector,
+                using=DENSE,
+                limit=k,
+                query_filter=query_filter,
+                with_payload=True,
+            )
+            return response.points
+
+        elif mode == SPARSE:
+            sparse_result = next(iter(self.sparse_embedder.embed([query])))
+            sparse_vector = models.SparseVector(
+                indices=sparse_result.indices.tolist(),
+                values=sparse_result.values.tolist(),
+            )
+            response = self.client.query_points(
+                collection_name=self.config.collection,
+                query=sparse_vector,
+                using=SPARSE,
+                limit=k,
+                query_filter=query_filter,
+                with_payload=True,
+            )
+            return response.points
+
+        elif mode == "hybrid":
+            dense_vector = next(iter(self.dense_embedder.embed([query]))).tolist()
+            sparse_result = next(iter(self.sparse_embedder.embed([query])))
+            sparse_vector = models.SparseVector(
+                indices=sparse_result.indices.tolist(),
+                values=sparse_result.values.tolist(),
+            )
+
+            response = self.client.query_points(
+                collection_name=self.config.collection,
+                prefetch=[
+                    models.Prefetch(
+                        query=dense_vector,
+                        using=DENSE,
+                        limit=k * 2,
+                        filter=query_filter,
+                    ),
+                    models.Prefetch(
+                        query=sparse_vector,
+                        using=SPARSE,
+                        limit=k * 2,
+                        filter=query_filter,
+                    ),
+                ],
+                query=models.FusionQuery(fusion=models.Fusion.RRF),
+                limit=k,
+                query_filter=query_filter,
+                with_payload=True,
+            )
+            return response.points
+
+        else:
+            raise ValueError(
+                f"Unsupported search mode: '{mode}'. Choose from 'dense', 'sparse', or 'hybrid'."
+            )
