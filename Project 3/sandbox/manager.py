@@ -8,13 +8,83 @@ TODO:
   paths and anything that resolves outside the workspace
 - reset(): delete sandbox/workspaces, sandbox/remotes and sandbox/prs
 """
+import os
+import stat
 from pathlib import Path,PurePosixPath, PureWindowsPath
+from dataclasses import dataclass
+import re
+import shutil
+import subprocess
+
+
+_SAFE_NAME = re.compile(r"[A-Za-z0-9_-]{1,64}")
+
+def _force_remove(func, path, exc):
+    """rmtree error handler: git marks object files read-only on Windows.
+    Make the file writable, then retry the operation that failed."""
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+
+def _rmtree(path: Path) -> None:
+    """Delete a folder tree. Missing folders are fine; read-only files are handled."""
+    if path.exists():
+        shutil.rmtree(path, onexc=_force_remove)
+
+SANDBOX_ROOT = Path(__file__).parent
+
+@dataclass(frozen=True)
+class Workspace:
+    run_id: str
+    path: Path
+    remote: Path
+
+class SandboxError(Exception):
+    """Bad fixture name, bad run id, or workspace already exists."""
 
 class PathEscapeError(Exception):
   """Raised when a path resolves outside the allowed workspace."""
 
-def create_workspace(fixture,run_id)->Path:
-  raise NotImplementedError("Create workspace")
+def _git(cwd: Path, *args: str) -> str:
+    result = subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True)
+    return result.stdout.strip()
+
+def create_workspace(fixture:str,run_id:str,root: Path = SANDBOX_ROOT)->Workspace:
+  if not re.fullmatch(_SAFE_NAME,run_id):
+    raise SandboxError(f"Bad run_id {run_id}")
+  if not re.fullmatch(_SAFE_NAME,fixture):
+    raise SandboxError(f"Bad fixture {fixture}")
+  if not Path(root/"fixtures"/fixture).is_dir():
+    raise SandboxError(f"fixture not found {fixture}")
+  if Path(root/"workspaces"/run_id).exists():
+    raise SandboxError(f"workspace already exists {run_id}")
+  if Path(root/"remotes"/f"{run_id}.git").exists():
+    raise SandboxError(f"remote repository exists {run_id}")
+
+  fixture_path = root/"fixtures"/fixture
+  ws_path = root/"workspaces"/run_id
+  remote_path = root/"remotes"/f"{run_id}.git"
+  try:
+    shutil.copytree(fixture_path, ws_path, ignore=shutil.ignore_patterns("__pycache__", ".pytest_cache", ".venv", ".git"))
+    _git(ws_path,"init","-b","main")
+    _git(ws_path,"config","user.name","Operator Agent")
+    _git(ws_path,"config","user.email","agent@sandbox.local")
+    _git(ws_path,"config","core.autocrlf","false")
+    _git(ws_path,"add","-A")
+    _git(ws_path,"commit","-m",f"baseline: fixture {fixture}")
+    _git(root,"init","--bare",str(remote_path))
+    _git(ws_path,"remote","add","origin",remote_path)
+    _git(ws_path,"push","origin","main")
+  except subprocess.CalledProcessError as e:
+    _rmtree(ws_path); _rmtree(remote_path)
+    raise SandboxError(f"git {' '.join(map(str, e.args[1][1:]))} failed: {(e.stderr or '').strip()}") from e
+  except Exception as e:
+    _rmtree(ws_path)
+    _rmtree(remote_path)
+    raise SandboxError(f"Failed to create workspace {run_id!r}: {e}") from e
+
+  return Workspace(run_id,ws_path,remote_path)
+  
+
 
 def resolve_in_workspace(workspace:Path, path:str)->Path:
   """
