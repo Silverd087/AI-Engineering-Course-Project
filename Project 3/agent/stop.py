@@ -27,4 +27,30 @@ class StopReason(StrEnum):
 
 
 def check_stop(state: AgentState, limits: Limits, now: float) -> StopReason | None:
-    raise NotImplementedError("A1: implement the stop rule")
+    # Rule 1: done. The model called `finish`, or made no tool call at all.
+    messages = state["messages"]
+    last = messages[-1] if messages else None
+    tool_calls = getattr(last, "tool_calls", None) or []
+    if last is not None and (not tool_calls or any(c["name"] == "finish" for c in tool_calls)):
+        return StopReason.DONE
+
+    # Rule 2: step limit. Too many tool calls have run.
+    if state["steps"] >= limits.max_steps:
+        return StopReason.MAX_STEPS
+
+    # Rule 3: budget. Too much money has been spent on model calls.
+    if state["cost_usd"] >= limits.max_cost_usd:
+        return StopReason.BUDGET
+
+    # Rule 4: looping. The last N calls are all identical.
+    n = limits.max_repeats
+    recent = state["recent_calls"]
+    if len(recent) >= n and len(set(recent[-n:])) == 1:
+        return StopReason.LOOPING
+
+    # Rule 5: timeout. The task has run for too long.
+    if now - state["started_at"] >= limits.task_timeout_s:
+        return StopReason.TIMEOUT
+
+    # No rule matched, so the loop continues.
+    return None
