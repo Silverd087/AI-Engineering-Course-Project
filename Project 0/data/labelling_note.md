@@ -14,10 +14,19 @@ Two people independently:
 Only items where both reviewers agree are included in the final `items.jsonl`.
 
 ## Dev / test split
-- `data/items.jsonl` currently has 10 starter items (`q001`–`q010`), covering: filter+order, aggregate, group_by, join+having, join+aggregate, join+group_by+limit, join+distinct, join+order+limit.
-- Target: 50+ items total. Plan is roughly 40 test items (frozen, used only for final scoring) + 10 dev items (used while iterating on the prompt, never included in the reported accuracy number).
-- TODO before freeze: expand to 50+, tag each item with `split: "dev"` or `split: "test"`, and re-run the two-person check on the full set.
+- 60 items total, tagged with a `split` field.
+- **dev** (10 items, `q001`–`q010`): the original starter items. Used while writing and debugging the prompt and parser. Never counted in the reported accuracy.
+- **test** (50 items, `q011`–`q060`): frozen before any model was run on them. Reported accuracy is n/50 on this split only.
+- Every reference query was checked to return a non-empty, non-NULL result, and items using `ORDER BY ... LIMIT` were checked for ties at the cut-off (a tie would make "the top N" ambiguous).
+- Questions name the columns to return ("Return the name and the total") because the scorer compares full rows: an extra column makes the answer wrong.
+- **Before freeze:** both reviewers must re-run the two-person check above on `q011`–`q060` and sign off below.
+
+| Reviewer | Items checked | Disagreements found / fixed |
+|---|---|---|
+| | q011–q060 | |
+| | q011–q060 | |
 
 ## Known limitations
+- `ORDER BY` is ignored by the scorer (result sets are compared as sorted multisets), so a correct query with the wrong sort order still counts as right. We accept this: sorting is rarely what a model gets wrong, and checking it would wrongly fail queries that order ties differently.
 - The seed data is small (20 books, 15 orders) by design — just enough that a wrong query returns a visibly different result from the correct one, not a realistic production volume.
 - Questions assume a single correct SQL *result*, not a single correct SQL *string* — `score.py` compares executed result sets, so differently-written-but-equivalent queries both score as correct.

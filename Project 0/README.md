@@ -6,118 +6,114 @@ Deadline: repo frozen before the first session of Week 2 · Demo: first session 
 
 ## The Task
 
-Given a natural-language question, generate a SQL query that answers it. We compare three models — one top API model, one cheap API model, and one open-weights model we run ourselves — under identical conditions, on at least 50 test items.
+Given a natural-language question and the schema of a small bookstore database, a model writes one SQLite query. We compare three models (a top API model, a cheap API model and an open-weights model we run ourselves) under identical conditions on **50 frozen test items** (+10 dev items).
 
-Correctness is checked automatically: run the generated query and the reference query against the same database, and compare results (not string-matching the SQL itself). "Database" here means a small local SQLite file seeded with a few rows per schema — no production infrastructure needed, just enough data that a wrong query returns a visibly different result.
+Correctness is checked automatically. We run the generated query and the reference query against the same local SQLite file and compare the **result sets**, not the SQL text. Equivalent queries written differently therefore both score as correct. A parse error, SQL error, refusal or timeout counts as wrong.
 
 ## Models Under Test
 
-| Role | Model | Notes |
+| Role | Model | How it runs |
 |---|---|---|
-| Top API model | TBD (e.g. Claude Opus 5, top GPT/Gemini) | via API |
-| Cheap API model | TBD (e.g. Claude Haiku 4.5, "mini"/"Flash") | via API |
-| Open-weights model | TBD (Llama, Qwen, Gemma, Mistral, Phi, 1B–14B) | run locally via Ollama / llama.cpp / vLLM |
+| Top API model | `gpt-5` | OpenAI API |
+| Cheap API model | `gpt-5-mini` | OpenAI API |
+| Open-weights model | `qwen2.5-coder:7b` (Q4_K_M) | Ollama on our own laptop (RTX 4060 8 GB), see `results/hardware_note.md` |
 
-Same prompt, temperature 0, same output-token limit, same 50 items in the same order, same parser for all three. No per-model prompt tweaks, no dropping items a model fails, no hand-fixing outputs.
+All three get the same prompt (`src/prompt.txt`), the same items in the same order, the same output cap (2048 tokens), the same timeout and the same parser (`extract_sql` in `src/run.py`). The local model runs at temperature 0. **Deviation:** OpenAI reasoning models (gpt-5 family) reject a `temperature` setting, so both API models run at their default sampling with reasoning effort `low`. Their reasoning tokens are billed as output and are included in the cost. Model names can be overridden with `TOP_MODEL`, `CHEAP_MODEL` and `LOCAL_MODEL`. If you change a model, add its list price to `PRICES_PER_MTOK` in `src/config.py`, and check the prices there against https://openai.com/api/pricing on the day you run.
 
-## Setup
+## Setup (one command)
 
 ```bash
-# 1. Clone and enter the repo
-git clone <repo-url> && cd "Project 0"
-
-# 2. Install dependencies
 pip install -r requirements.txt
-
-# 3. Set API keys as environment variables (never commit them)
-export TOP_MODEL_API_KEY=...
-export CHEAP_MODEL_API_KEY=...
 ```
 
-## Run
+You also need:
+- the OpenAI API key, never in the repo: put `OPENAI_API_KEY=sk-...` in `Project 0/.env` (git-ignored, loaded automatically) or export it in your shell.
+- [Ollama](https://ollama.com) running locally, with the model pulled: `ollama pull qwen2.5-coder:7b`
+
+## Run (one command)
 
 ```bash
-# 0. Build the local SQLite DB from schema.sql + seed.sql (one-time, or after editing either file)
-python data/build_db.py
-
-# 0b. Sanity-check the scorer itself: runs each item's own reference_sql as the
-#     "candidate" against data/bookstore.db -- should print 10/10 correct.
-python src/score.py --items data/items.jsonl --db data/bookstore.db --self-test --out results/self_test.csv
-
-# 1. Generate SQL from all three models (writes one JSONL row per {id, model, sql})
-python src/run.py --items data/items.jsonl --out results/raw_outputs.jsonl
-
-# 2. Score: executes each candidate + the reference SQL against data/bookstore.db, compares results
-python src/score.py --items data/items.jsonl --db data/bookstore.db --candidates results/raw_outputs.jsonl --out results/per_item.csv
-
-# 3. Build the summary table (accuracy, cost/1k, p50/p95 latency)
-python src/cost.py --in results/per_item.csv --out results/summary.csv
+python src/bench.py
 ```
+
+This builds `data/bookstore.db`, self-tests the scorer (60/60 expected), calls all three models one request at a time, scores them, builds the cost/latency summary and writes `report.pdf`. An interrupted run resumes where it stopped. Individual steps:
+
+```bash
+python data/build_db.py                       # build the SQLite DB from schema.sql + seed.sql
+python src/score.py --items data/items.jsonl --db data/bookstore.db --self-test --out results/self_test.csv
+python src/run.py [--models top,cheap,local] [--split test] [--limit 5]   # -> results/raw_outputs.jsonl
+python src/score.py --items data/items.jsonl --db data/bookstore.db --candidates results/raw_outputs.jsonl --out results/per_item.csv
+python src/cost.py                            # -> results/summary.csv, results/cost_model.json
+python src/report.py                          # -> report.pdf (1 page) + refreshes the table below
+```
+
+## Web frontend
+
+```bash
+python app/server.py        # open http://127.0.0.1:5000
+```
+
+- **Results**: per-model accuracy (n/50), p50/p95 latency, cost per 1k, failure breakdown, monthly cost at 100× and break-even, and a grid of every item × model. Click any cell to see the question, the reference SQL, each model's SQL and what it returned.
+- **Playground**: send a test item or your own question to any of the three models side by side. It uses the same prompt, parser and scorer as the benchmark and shows the SQL, the rows returned and right/wrong. Playground calls are not saved to `results/`.
+- **Data**: schema, prompt, settings and all 60 labelled items.
+
+## Results
+
+<!-- RESULTS:START -->
+*Not run yet. `python src/bench.py` fills this table from `results/summary.csv`.*
+<!-- RESULTS:END -->
+
+**3 wrong answers per model** and **our choice** are in `report.pdf` (the choice text lives in `results/choice.md`).
 
 ## Repo Structure
 
 ```
 Project 0/
 ├── README.md
+├── requirements.txt
 ├── data/
-│   ├── schema.sql           # bookstore DB schema: authors, books, customers, orders, order_items
-│   ├── seed.sql              # seed rows for the schema above
-│   ├── build_db.py           # builds data/bookstore.db from schema.sql + seed.sql
-│   ├── bookstore.db          # generated — do not hand-edit, run build_db.py instead
-│   ├── items.jsonl           # (question, reference_sql, category) items — 10 so far, target 50+
-│   └── labelling_note.md     # where questions came from, how correctness was verified, dev/test split
+│   ├── schema.sql, seed.sql  # bookstore DB: authors, books, customers, orders, order_items
+│   ├── build_db.py           # builds data/bookstore.db
+│   ├── items.jsonl           # 60 items: {id, question, reference_sql, category, split}
+│   └── labelling_note.md     # where items came from, how labels were checked, dev/test split
 ├── src/
-│   ├── prompt.txt           # the single shared prompt (TODO: Member B)
-│   ├── run.py                # calls all 3 models, saves results/raw_outputs.jsonl (TODO: Member B)
-│   ├── score.py              # executes generated vs reference SQL against bookstore.db, compares results (done)
-│   └── cost.py                # computes cost/1k requests, p50/p95 latency (TODO: Member C)
+│   ├── config.py             # models, shared settings, prices, self-hosting cost assumptions
+│   ├── prompt.txt            # the single shared prompt
+│   ├── run.py                # calls the models (OpenAI Responses API + Ollama), times them, parses SQL -> results/raw_outputs.jsonl
+│   ├── score.py              # executes candidate vs reference SQL, compares result sets
+│   ├── cost.py               # accuracy, p50/p95, cost/1k, 100x, break-even -> summary.csv
+│   ├── report.py             # report.pdf (1 page) from the results files
+│   └── bench.py              # runs everything in order
+├── app/                      # Flask frontend (server.py + static/index.html)
 ├── results/
-│   ├── per_item.csv         # one row per test item per model
-│   ├── summary.csv           # aggregated accuracy / cost / latency
-│   └── hardware_note.md      # specs used for the open-weights model
-├── report.pdf                 # 2-page report (see brief)
-└── postmortem.md              # 1-page: what went wrong, what we learned
+│   ├── raw_outputs.jsonl     # every raw model answer, with usage + latency
+│   ├── per_item.csv          # one scored row per item per model
+│   ├── summary.csv, cost_model.json
+│   ├── choice.md             # our written decision (goes into the report)
+│   └── hardware_note.md
+├── report.pdf
+└── postmortem.md
 ```
-
-## Results
-
-*(Fill in after runs — accuracy is n/50, not just %; a parse error, refusal, or timeout counts as wrong.)*
-
-| Model | Accuracy (n/50) | Cost / 1k requests | Latency p50 (ms) | Latency p95 (ms) |
-|---|---|---|---|---|
-| Top API model | | | | |
-| Cheap API model | | | | |
-| Open-weights model | | | | |
-
-**3 wrong answers per model:** to be added to `report.pdf`, with the query, expected result, and actual result.
-
-**Our choice:** *(one paragraph — which model we'd use, and what would make us switch)*
 
 ## Task Division (3 people)
 
 ### Member A — Data & Evaluation Lead
-- Build `data/items.jsonl`: 50+ (question, database schema, reference SQL, expected result) pairs, drawn from a public dataset (e.g. Spider) or hand-written against a chosen schema
-- Create the small seeded SQLite file(s) the queries run against — just enough rows to make wrong queries return visibly wrong results (no production DB or server needed)
-- Write the labelling note: where questions came from, how correctness was verified (two people check every label)
-- Own `src/score.py`: executes both the generated and reference SQL against the local SQLite file(s), compares result sets (not raw text), returns right/wrong
-- Own the dev/test split and the "one example item" write-up for the report
+- `data/items.jsonl` (60 items, dev/test split), seed DB, `data/labelling_note.md`
+- `src/score.py`: result-set comparison, failure classes, Windows-safe timeout
+- The dev/test split and the example item in the report
 
 ### Member B — Model Runner Lead
-- Own `src/run.py`: calls all three models with the identical prompt, temperature 0, same output-token cap, same item order
-- Set up and run the open-weights model locally (Ollama/llama.cpp/vLLM), including the hardware note (spec, tokens/sec)
-- Manage API keys via environment variables (confirm none land in the repo)
-- Write the "Setup" section of the report: model names, exact versions/dates, settings, hardware
+- `src/run.py` + `src/prompt.txt`: identical prompt, settings, item order and parser for all three models
+- Local model setup with Ollama, `results/hardware_note.md` (spec, tokens/s)
+- API keys via environment variables only; the Setup section of the report
 
 ### Member C — Cost, Latency & Reporting Lead
-- Own `src/cost.py`: computes cost per 1k requests (API token usage × list price; hardware cost/hour ÷ throughput for the local model), and p50/p95 latency from real timed runs (50+ calls per model)
-- Project cost at 100× traffic and compute the API-vs-self-hosted break-even volume
-- Assemble `report.pdf` (2 pages) and `postmortem.md` (1 page — must include real problems, not just a clean success story)
-- Compile `results/summary.csv` and the final results table above
+- `src/cost.py`: cost per 1k requests, p50/p95, 100× projection, break-even volume
+- `src/report.py`, `report.pdf`, `postmortem.md`, `results/choice.md`, the web frontend (`app/`)
 
-### Shared (all three)
-- Agree on the task/schema and get instructor sign-off by Day 2
+### Shared
+- Instructor sign-off on the task by Day 2
 - Review each other's 3 wrong-answer examples before they go in the report
-- Contributions section below
 
 ## Contributions
 
@@ -129,9 +125,9 @@ Project 0/
 
 ## Rules Checklist
 
-- [ ] Runs from a clean clone
-- [ ] Has an automatic eval (`score.py`)
-- [ ] Has a cost model (`cost.py`)
-- [ ] Has a postmortem with real problems
+- [x] Runs from a clean clone (`pip install -r requirements.txt` then `python src/bench.py`)
+- [x] Has an automatic eval (`src/score.py`, no human or LLM in the loop)
+- [x] Has a cost model (`src/cost.py`, assumptions in `src/config.py`)
+- [ ] Has a postmortem with real problems (`postmortem.md`, finish after the real run)
 - [ ] Every line is explainable by the team
-- [ ] No API keys in the repo
+- [x] No API keys in the repo
