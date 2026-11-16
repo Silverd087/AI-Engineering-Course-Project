@@ -18,6 +18,7 @@ import subprocess
 
 
 _SAFE_NAME = re.compile(r"[A-Za-z0-9_-]{1,64}")
+_RESETTABLE = ("workspaces", "remotes", "prs")
 
 def _force_remove(func, path, exc):
     """rmtree error handler: git marks object files read-only on Windows.
@@ -118,9 +119,19 @@ def resolve_in_workspace(workspace:Path, path:str)->Path:
     raise PathEscapeError(f"Access to .git is forbidden: {path!r}")
   return candidate
 
-def reset():
-  raise NotImplementedError("Reset")
+def reset(root:Path = SANDBOX_ROOT)->list[Path]:
+  """Delete all runtime state under root. Never touches fixtures/ or source files.
+  Returns the folders that were actually deleted."""
+  result = []
+  for name in _RESETTABLE:
+    if (root / name).exists():
+      _rmtree(root/name)
+      result.append(root / name)
+  return result
+  
 
+   
+  
 def main() -> None:
     raise SystemExit("Sandbox manager not implemented yet.")
 
