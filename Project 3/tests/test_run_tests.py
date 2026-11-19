@@ -1,9 +1,11 @@
 import pytest
+import importlib
 
-from agent.tools import run_tests as run_tests_module
 from agent.tools.base import ErrorType
 from agent.tools.run_tests import run_tests
 
+
+run_tests_module = importlib.import_module("agent.tools.run_tests")
 
 @pytest.fixture
 def ws(tmp_path):

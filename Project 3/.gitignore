@@ -14,3 +14,5 @@ sandbox/prs/
 
 # Generated eval output (results tables are copied into the README)
 eval/results/traces/
+eval/results/prs/
+eval/results/summary.json

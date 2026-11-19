@@ -15,6 +15,8 @@ from dataclasses import dataclass
 import re
 import shutil
 import subprocess
+import argparse
+import uuid
 
 
 _SAFE_NAME = re.compile(r"[A-Za-z0-9_-]{1,64}")
@@ -133,7 +135,24 @@ def reset(root:Path = SANDBOX_ROOT)->list[Path]:
    
   
 def main() -> None:
-    raise SystemExit("Sandbox manager not implemented yet.")
+    parser = argparse.ArgumentParser(prog="sandbox.manager", description="Create or reset the sandbox.")
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    create = sub.add_parser("create", help="create a workspace from a fixture")
+    create.add_argument("--fixture", required=True, help="folder name in sandbox/fixtures/")
+    create.add_argument("--run-id", default=None, help="defaults to a random id")
+
+    sub.add_parser("reset", help="delete all workspaces, remotes and mock PRs")
+
+    args = parser.parse_args()
+    if args.command == "create":
+        run_id = args.run_id or uuid.uuid4().hex
+        workspace = create_workspace(args.fixture, run_id)
+        print(f"Created workspace {run_id}: {workspace.path}")
+        print(f"Remote: {workspace.remote}")
+    else:
+        removed = reset()
+        print(f"Removed {len(removed)} item(s).")
 
 
 if __name__ == "__main__":
