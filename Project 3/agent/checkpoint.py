@@ -6,7 +6,7 @@ import time
 from langchain_core.messages import ToolMessage
 from langgraph.types import interrupt
 
-from agent.nodes import WRITE_TOOLS, last_tool_calls
+from agent.nodes import WRITE_TOOLS, usage_fields, last_tool_calls, step_usage
 from agent.state import AgentState
 from agent.stop import StopReason
 from agent.tools.base import ErrorType, ToolResult
@@ -57,6 +57,7 @@ def approve_node(state: AgentState, trace, run_id: str) -> dict:
                 error_type=error_type,
                 output_preview=f"Human answered '{answer}'",
                 approved=False,
+                **usage_fields(step_usage(state["messages"], call["id"])),
                 t_start=now,
                 t_end=now,
             )

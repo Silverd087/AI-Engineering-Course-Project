@@ -67,11 +67,48 @@ def stop_node(state: AgentState, limits: Limits, now: float) -> dict:
     }
 
 
+ZERO_USAGE = {"tokens_in": 0, "tokens_out": 0, "cost_usd": 0.0}
+
+
 def agent_node(state: AgentState, model, settings) -> dict:
     messages = [SystemMessage(content=SYSTEM_PROMPT)] + state["messages"]
     response = model.invoke(messages)
     cost = cost_of(response, settings)
+    usage = getattr(response, "usage_metadata", None) or {}
+    # Keep this call's usage on the message, so the step that runs its tool calls can record it.
+    response.response_metadata = {
+        **(response.response_metadata or {}),
+        "step_usage": {
+            "tokens_in": usage.get("input_tokens", 0),
+            "tokens_out": usage.get("output_tokens", 0),
+            "cost_usd": cost,
+        },
+    }
     return {"messages": [response], "cost_usd": state["cost_usd"] + cost}
+
+
+def step_usage(messages, call_id: str) -> dict:
+    """Model usage to record on one tool step.
+
+    One model call can request several tool calls. Its cost goes on the first of them
+    only, so summing the step records never counts a model call twice. Any other call
+    gets zeros.
+    """
+    for message in reversed(messages):
+        if isinstance(message, AIMessage):
+            calls = message.tool_calls
+            if calls and calls[0]["id"] == call_id:
+                return message.response_metadata.get("step_usage", dict(ZERO_USAGE))
+            return dict(ZERO_USAGE)
+    return dict(ZERO_USAGE)
+
+
+def usage_fields(usage: dict) -> dict:
+    return {
+        "tokens_in": usage["tokens_in"],
+        "tokens_out": usage["tokens_out"],
+        "cost_usd": usage["cost_usd"],
+    }
 
 
 def signature(name: str, args: dict) -> str:
@@ -121,6 +158,7 @@ def tools_node(state: AgentState, tools: dict, trace: TraceWriter, run_id: str) 
                 error_type=result.error_type,
                 output_preview=output[:500],
                 approved=True if name in WRITE_TOOLS else None,
+                **usage_fields(step_usage(state["messages"], call["id"])),
                 t_start=started,
                 t_end=time.time(),
             )
