@@ -70,6 +70,69 @@ def stop_node(state: AgentState, limits: Limits, now: float) -> dict:
 ZERO_USAGE = {"tokens_in": 0, "tokens_out": 0, "cost_usd": 0.0}
 
 
+def final_model_record(state: AgentState, run_id: str) -> TraceRecord | None:
+    """Trace record for the last model call, which ends the run and runs no tool.
+
+    Without this record the step costs would not add up to the run total.
+    """
+    last = state["messages"][-1]
+    if not isinstance(last, AIMessage):
+        return None
+    names = [c["name"] for c in last.tool_calls]
+    if "finish" in names:
+        label = "finish"
+    elif names:
+        label = "stopped"  # a limit was hit while tool calls were still pending
+    else:
+        label = "reply"    # the model answered without calling a tool
+    usage = last.response_metadata.get("step_usage", dict(ZERO_USAGE))
+    now = time.time()
+    return TraceRecord(
+        run_id=run_id,
+        step=state["steps"],
+        kind="model",
+        tool=label,
+        args={},
+        ok=True,
+        **usage_fields(usage),
+        t_start=now,
+        t_end=now,
+    )
+
+
+def last_ai_message(messages):
+    for message in reversed(messages):
+        if isinstance(message, AIMessage):
+            return message
+    return None
+
+
+def quit_model_record(state: AgentState, run_id: str, quit_call_id: str) -> TraceRecord | None:
+    """Model record for a reply whose cost would otherwise be lost when the human quits.
+
+    The reply's cost is attached to its first tool call. If the quit happens at a later call,
+    the first call never runs and gets no record, so the cost is recorded here instead.
+    """
+    message = last_ai_message(state["messages"])
+    if message is None or not message.tool_calls:
+        return None
+    if message.tool_calls[0]["id"] == quit_call_id:
+        return None  # the quit call itself already carries this cost
+    usage = message.response_metadata.get("step_usage", dict(ZERO_USAGE))
+    now = time.time()
+    return TraceRecord(
+        run_id=run_id,
+        step=state["steps"],
+        kind="model",
+        tool="quit",
+        args={},
+        ok=True,
+        **usage_fields(usage),
+        t_start=now,
+        t_end=now,
+    )
+
+
 def agent_node(state: AgentState, model, settings) -> dict:
     messages = [SystemMessage(content=SYSTEM_PROMPT)] + state["messages"]
     response = model.invoke(messages)

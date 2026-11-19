@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -13,6 +13,7 @@ class TraceRecord(BaseModel):
 
     run_id: str
     step: int
+    kind: Literal["tool", "model"] = "tool"  # "model" = the final model call, which ran no tool
     tool: str
     args: dict[str, Any]
     ok: bool

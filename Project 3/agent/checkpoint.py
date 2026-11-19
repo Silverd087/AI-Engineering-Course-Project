@@ -6,7 +6,7 @@ import time
 from langchain_core.messages import ToolMessage
 from langgraph.types import interrupt
 
-from agent.nodes import WRITE_TOOLS, usage_fields, last_tool_calls, step_usage
+from agent.nodes import WRITE_TOOLS, last_tool_calls, quit_model_record, step_usage, usage_fields
 from agent.state import AgentState
 from agent.stop import StopReason
 from agent.tools.base import ErrorType, ToolResult
@@ -64,6 +64,9 @@ def approve_node(state: AgentState, trace, run_id: str) -> dict:
         )
 
         if answer == "q":
+            quit_record = quit_model_record(state, run_id, call["id"])
+            if quit_record is not None:
+                trace.write(quit_record)
             return {"stop_reason": StopReason.USER_QUIT.value}
 
         rejections.append(

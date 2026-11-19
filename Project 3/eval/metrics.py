@@ -42,7 +42,8 @@ def _matches(step: Step, record: TraceRecord) -> bool:
 
 
 def executed(records: list[TraceRecord]) -> list[TraceRecord]:
-    return [r for r in records if r.approved is not False]
+    # Model-call records are cost data, not steps, so they are never counted as executed.
+    return [r for r in records if r.kind == "tool" and r.approved is not False]
 
 
 def step_accuracy(expected: list[Step], records: list[TraceRecord]) -> float:
