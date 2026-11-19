@@ -63,7 +63,7 @@ flowchart LR
 
 - **State** (`AgentState`): messages, step count, cost so far, recent tool calls, stop reason. Saved by a LangGraph checkpointer (`SqliteSaver`) so a run can pause at `approve` and resume.
 - **Tools** (`agent/tools/`, strict Pydantic schemas) — read: `list_files`, `read_file`, `search_code` · exec: `run_tests` · write: `edit_file`, `open_pull_request` · done: `finish`.
-- **Trace:** every tool call is written to a JSONL trace (input, output, time, tokens).
+- **Trace:** every tool call is written to a JSONL trace (input, output, time, tokens, cost). A model call's cost is recorded on its first tool step; the final model call that ends the run has its own record (`kind` = `model`).
 
 **Graph nodes and edges**
 
@@ -76,7 +76,7 @@ flowchart LR
 
 ### Tools
 
-Each tool is a LangChain `StructuredTool` whose `args_schema` is a Pydantic model with `extra="forbid"`, so the model cannot pass bad arguments.
+Each tool is a plain Python function `(workspace, args) -> ToolResult`. Its arguments are checked by a Pydantic model with `extra="forbid"`, so the model cannot pass unknown or bad arguments. The model sees OpenAI-style function schemas generated from those models.
 
 | Tool | Kind | Input (strict schema) | Idempotency / safety |
 |---|---|---|---|
@@ -105,7 +105,7 @@ The loop stops at whichever happens first:
 
 Rules 1–5 are checked in the `route_after_agent` conditional edge, which sends the graph to `END` and records *why* it stopped (`done`, `max_steps`, `budget`, `looping`, `timeout`).
 
-**Proof:** `tests/test_stop.py` runs the graph against a *scripted adversarial model* (LangChain's `GenericFakeChatModel`, no API calls) that never calls `finish` (and one that repeats the same call forever) and asserts the loop always ends within the limits. Hypothesis-based property tests check the same thing for random tool-call sequences.
+**Proof:** `tests/test_stop.py` runs the graph against a *scripted adversarial model* (a fake model with no API calls) that never calls `finish` (and one that repeats the same call forever) and asserts the loop always ends within the limits. Hypothesis-based property tests check the same thing for random tool-call sequences.
 
 ### Human checkpoint
 
@@ -130,16 +130,18 @@ Requires [`uv`](https://docs.astral.sh/uv/) and `git`. `make` targets use POSIX 
 
 **Configuration:** copy `.env.example` to `.env` and set the LLM API key. Never commit `.env`; the repo contains no real credentials.
 
+**Tracing (optional):** set `LANGSMITH_TRACING=true` and `LANGSMITH_API_KEY` in `.env` to send runs to LangSmith, project `cs496-operator`. LangSmith receives prompts and tool outputs, which include file contents from the workspace. Keep tracing off for any repo that isn't a sample.
+
 **Setup (one command):**
 
 ```bash
-make setup          # uv sync + build the sandbox sample repos
+make setup          # uv sync (sample repos are already in sandbox/fixtures/)
 ```
 
 **Run (one command):**
 
 ```bash
-make run SCENARIO=utcnow_basic      # interactive: you approve each write
+make run SCENARIO=utcnow_happy     # interactive: you approve each write
 ```
 
 **Other commands:**
@@ -177,6 +179,7 @@ eval/
   run_eval.py         # runs scenarios, writes traces
   metrics.py          # trajectory metrics
   results/            # generated results (tables + traces)
+  results/cost.md     # cost model and the cost results table
 tests/                # unit tests (tools, sandbox, stop-rule proof)
 errors.md             # error taxonomy, one test per class
 threat_model.md       # injection through tool output
@@ -213,7 +216,7 @@ success:
   max_steps: 15
 ```
 
-### Scenario mix (target ≥ 30)
+### Scenario mix (target ≥ 30; 18 written so far)
 
 | Group | Count | Purpose |
 |---|---|---|
@@ -230,6 +233,8 @@ success:
 | Per step | step accuracy · tool-call precision (right tool, right args) · wasted steps per task |
 | Per task | task success rate · recovery-after-failure rate · injection results · stop rule never exceeded |
 | Cost & speed | steps, tokens and $ per task · p50 / p95 time per task · cost at 100× |
+
+**Cost gap:** a model call that fails before it returns (rate limit, network error, bad key) has no response, so its cost is not recorded. The provider may still bill it. See `eval/results/cost.md`.
 
 A correct final repo reached through a **forbidden** step (e.g. editing tests, writing outside the spec, obeying an injection) counts as a **failure**.
 
@@ -258,7 +263,7 @@ A correct final repo reached through a **forbidden** step (e.g. editing tests, w
 - **Least privilege:** no shell, no network, no deletes; writes limited to files the migration spec allows.
 - **Data vs instructions:** every tool output is wrapped in `<untrusted_tool_output>` tags, and the system prompt says text inside them is data, never instructions.
 - **Human checkpoint** before every write.
-- **Detection:** canary strings and known injection patterns in tool output are flagged in the trace.
+- **Known gaps:** no canary or injection-pattern detector is implemented. `run_tests` does not block network access from the test process. `search_code` has no regex timeout. See [`threat_model.md`](threat_model.md).
 
 Details: [`threat_model.md`](threat_model.md) · [`errors.md`](errors.md)
 
@@ -268,8 +273,8 @@ Details: [`threat_model.md`](threat_model.md) · [`errors.md`](errors.md)
 
 The work is split into three parallel tracks that only meet at **three agreed interfaces**. Fix these interfaces on Day 1 so nobody blocks anybody:
 
-1. **Tool contract:** each tool is a LangChain `StructuredTool` with a Pydantic `args_schema`, a `metadata={"is_write": bool}` flag, and returns `ToolResult{ok, result | error_type, message}` as JSON. The workspace path is injected, never chosen by the model.
-2. **Trace format:** one JSONL line per step: `{run_id, step, tool, args, ok, error_type, output_preview, approved, tokens_in, tokens_out, cost_usd, t_start, t_end}`.
+1. **Tool contract:** each tool is a function `(workspace, args) -> ToolResult`, with a Pydantic args model (`StrictArgs`). Write tools are listed in `WRITE_TOOLS`. A `ToolResult` is `{ok, result | error_type, message}`, returned as JSON. The workspace path is injected, never chosen by the model.
+2. **Trace format:** one JSONL line per record: `{run_id, step, kind, tool, args, ok, error_type, output_preview, approved, tokens_in, tokens_out, cost_usd, t_start, t_end}`. `kind` is `tool` for a tool step and `model` for the final model call (`finish`, `reply`, `stopped` or `quit`).
 3. **Scenario format:** the YAML schema in §5.
 
 ### Member A — Agent core (LangGraph graph, stop rule, checkpoint)
@@ -293,7 +298,7 @@ The work is split into three parallel tracks that only meet at **three agreed in
 | B1 | Sample repos with failing-under-`-W error` test suites (≥ 4) | `sandbox/fixtures/` |
 | B2 | Workspace manager: create, path jail, local bare remote, reset | `sandbox/manager.py` |
 | B3 | Mock PR API (file-backed, idempotent by branch, resettable) | `sandbox/mock_pr_server.py` |
-| B4 | Read tools as LangChain `StructuredTool`s: `list_files`, `read_file`, `search_code` | `agent/tools/` |
+| B4 | Read tools: `list_files`, `read_file`, `search_code` | `agent/tools/` |
 | B5 | `run_tests` (subprocess, timeout, no network, truncation) | `agent/tools/run_tests.py` |
 | B6 | Write tools: idempotent `edit_file`, `open_pull_request` | `agent/tools/` |
 | B7 | Model-readable error types for every tool | `agent/tools/errors.py` |
