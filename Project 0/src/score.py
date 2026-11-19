@@ -17,10 +17,10 @@ import csv
 import json
 import math
 import shutil
-import signal
 import sqlite3
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 TIMEOUT_SECONDS = 5
@@ -31,35 +31,36 @@ class QueryTimeout(Exception):
     pass
 
 
-def _alarm_handler(signum, frame):
-    raise QueryTimeout(f"query exceeded {TIMEOUT_SECONDS}s")
-
-
 def run_query(db_path, sql, timeout=TIMEOUT_SECONDS):
     """Executes a single SQL statement read-only, with a wall-clock timeout.
 
     Returns (rows, error_str). rows is None if an error occurred.
+
+    The timeout uses sqlite3's progress handler (called every N VM steps) rather
+    than signal.SIGALRM, which does not exist on Windows.
     """
-    uri = f"file:{db_path}?mode=ro"
-    old_handler = signal.signal(signal.SIGALRM, _alarm_handler)
-    signal.alarm(timeout)
+    if not sql or not sql.strip():
+        return None, "parse_error: no SQL found in model output"
+    uri = f"file:{Path(db_path).as_posix()}?mode=ro"
+    deadline = time.monotonic() + timeout
     try:
         conn = sqlite3.connect(uri, uri=True)
         try:
+            # Returning non-zero aborts the running statement with "interrupted".
+            conn.set_progress_handler(lambda: int(time.monotonic() > deadline), 10_000)
             cur = conn.execute(sql)
             rows = cur.fetchall()
             return rows, None
         finally:
             conn.close()
-    except QueryTimeout as e:
-        return None, f"timeout: {e}"
+    except sqlite3.OperationalError as e:
+        if time.monotonic() > deadline:
+            return None, f"timeout: query exceeded {timeout}s"
+        return None, f"sql_error: {e}"
     except sqlite3.Error as e:
         return None, f"sql_error: {e}"
     except Exception as e:
         return None, f"error: {e}"
-    finally:
-        signal.alarm(0)
-        signal.signal(signal.SIGALRM, old_handler)
 
 
 def _normalize_cell(v):
@@ -89,7 +90,7 @@ def rows_match(a, b):
 
 def load_items(path):
     items = {}
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line:
@@ -101,13 +102,64 @@ def load_items(path):
 
 def load_candidates(path):
     rows = []
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line:
                 continue
             rows.append(json.loads(line))
     return rows
+
+
+# Fields copied from run.py output into per_item.csv so every table can be built from that one file.
+PASSTHROUGH = ["model_name", "status", "latency_ms", "input_tokens", "output_tokens",
+               "eval_tokens_per_s", "stop_reason", "run_date", "raw_output"]
+FIELDNAMES = ["id", "split", "category", "model", "correct", "failure", "error",
+              "candidate_sql", "reference_sql", "expected_rows", "actual_rows"] + PASSTHROUGH
+
+
+def classify(cand, cand_err, correct):
+    """One failure label per row, so the report can show parse errors/refusals/timeouts in their own column."""
+    if correct:
+        return ""
+    status = cand.get("status", "ok")
+    if status and status != "ok":
+        return status  # api_error / refusal / timeout / truncated, set by run.py
+    if cand_err:
+        if cand_err.startswith("parse_error"):
+            return "parse_error"
+        if cand_err.startswith("timeout"):
+            return "timeout"
+        return "sql_error"
+    return "wrong_result"
+
+
+def score_one(db_path, item, cand):
+    """Scores one candidate against one item. Used by the CLI and by the web frontend."""
+    ref_rows, ref_err = run_query(db_path, item["reference_sql"])
+    if ref_err:
+        # Reference query itself is broken -- this is a data bug, not a model failure.
+        raise RuntimeError(f"Reference SQL for {item['id']} failed: {ref_err}")
+    status = cand.get("status", "ok")
+    if status and status != "ok":
+        cand_rows, cand_err = None, cand.get("error") or status
+    else:
+        cand_rows, cand_err = run_query(db_path, cand.get("sql", ""))
+    correct = (cand_err is None) and rows_match(ref_rows, cand_rows)
+    return {
+        "id": item["id"],
+        "split": item.get("split", ""),
+        "category": item.get("category", ""),
+        "model": cand.get("model", ""),
+        "correct": int(correct),
+        "failure": classify(cand, cand_err, correct),
+        "error": cand_err or "",
+        "candidate_sql": cand.get("sql", ""),
+        "reference_sql": item["reference_sql"],
+        "expected_rows": json.dumps(ref_rows[:20], default=str),
+        "actual_rows": json.dumps(cand_rows[:20], default=str) if cand_rows is not None else "",
+        **{k: cand.get(k, "") for k in PASSTHROUGH},
+    }
 
 
 def score(items_path, db_path, out_path, candidates_path=None, self_test=False):
@@ -119,45 +171,32 @@ def score(items_path, db_path, out_path, candidates_path=None, self_test=False):
         candidates = load_candidates(candidates_path)
 
     out_rows = []
-    n_correct = 0
     for cand in candidates:
         item = items.get(cand["id"])
         if item is None:
-            out_rows.append({
-                "id": cand["id"], "model": cand.get("model", ""), "correct": 0,
-                "error": "unknown item id", "candidate_sql": cand.get("sql", ""),
-            })
+            out_rows.append({"id": cand["id"], "model": cand.get("model", ""), "correct": 0,
+                             "failure": "unknown_item", "error": "unknown item id",
+                             "candidate_sql": cand.get("sql", "")})
             continue
-
-        ref_rows, ref_err = run_query(db_path, item["reference_sql"])
-        if ref_err:
-            # Reference query itself is broken -- this is a data bug, not a model failure.
-            raise RuntimeError(f"Reference SQL for {item['id']} failed: {ref_err}")
-
-        cand_rows, cand_err = run_query(db_path, cand["sql"])
-        correct = (cand_err is None) and rows_match(ref_rows, cand_rows)
-        n_correct += int(correct)
-
-        out_rows.append({
-            "id": cand["id"],
-            "model": cand.get("model", ""),
-            "correct": int(correct),
-            "error": cand_err or "",
-            "candidate_sql": cand["sql"],
-            "reference_sql": item["reference_sql"],
-        })
+        out_rows.append(score_one(db_path, item, cand))
 
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = ["id", "model", "correct", "error", "candidate_sql", "reference_sql"]
-    with open(out_path, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+    with open(out_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
         writer.writeheader()
         writer.writerows(out_rows)
 
-    total = len(out_rows)
-    print(f"{n_correct}/{total} correct -> {out_path}")
-    return n_correct, total
+    by_model = {}
+    for r in out_rows:
+        m = by_model.setdefault(r["model"], [0, 0])
+        m[0] += int(r["correct"])
+        m[1] += 1
+    for model, (c, t) in by_model.items():
+        print(f"{model:>10}: {c}/{t} correct (all splits)")
+    print(f"-> {out_path}")
+    n_correct = sum(int(r["correct"]) for r in out_rows)
+    return n_correct, len(out_rows)
 
 
 def main():

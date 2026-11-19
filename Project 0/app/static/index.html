@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SQL Bake-Off</title>
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#fff; --ink:#1b1f24; --muted:#5d6672; --line:#e2e5ea; --soft:#eef0f3;
+  --top:#6d4ad6; --cheap:#0f8f86; --local:#c77b0a;
+  --ok:#1f8a4c; --ok-bg:#e3f4ea; --bad:#c23b3b; --bad-bg:#fbe7e7; --warn:#9a6b00; --warn-bg:#fdf3d8;
+  --mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){ :root{
+  --bg:#111418; --panel:#191d23; --ink:#e7eaee; --muted:#98a2ae; --line:#2b313a; --soft:#222830;
+  --top:#a08cf0; --cheap:#3cc4b9; --local:#f0a83a;
+  --ok:#5ed08f; --ok-bg:#16301f; --bad:#f07a7a; --bad-bg:#3a1c1c; --warn:#e8c05a; --warn-bg:#352b12;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+.bar{display:flex;align-items:center;gap:24px;height:58px}
+.brand{font-weight:700;font-size:17px;letter-spacing:-.01em}
+.brand small{font-weight:500;color:var(--muted);margin-left:8px;font-size:13px}
+nav{display:flex;gap:4px;margin-left:auto}
+nav button{border:0;background:none;color:var(--muted);font:inherit;padding:8px 14px;border-radius:8px;cursor:pointer}
+nav button.on{background:var(--soft);color:var(--ink);font-weight:600}
+main{padding:24px 0 60px}
+h2{font-size:20px;margin:0 0 4px;letter-spacing:-.01em} h3{font-size:15px;margin:0 0 10px}
+.sub{color:var(--muted);margin:0 0 20px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;border-top:4px solid var(--c)}
+.role{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--c);font-weight:700}
+.mname{font-family:var(--mono);font-size:13px;color:var(--muted);margin-bottom:10px;word-break:break-all}
+.big{font-size:34px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.big span{font-size:15px;color:var(--muted);font-weight:500}
+.meter{height:8px;background:var(--soft);border-radius:99px;overflow:hidden;margin:8px 0 14px}
+.meter i{display:block;height:100%;background:var(--c);border-radius:99px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:14px}
+.kv b{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+.kv span{color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;font-weight:600}
+.pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.bad{background:var(--bad-bg);color:var(--bad)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)} .pill.dim{background:var(--soft);color:var(--muted)}
+.heat{display:grid;grid-template-columns:62px repeat(3,1fr) 2.4fr;gap:3px;font-size:13px}
+.heat .h{color:var(--muted);font-weight:600;font-size:12px;padding:4px 2px}
+.heat .id{font-family:var(--mono);padding:5px 2px;color:var(--muted)}
+.cell{border-radius:5px;cursor:pointer;min-height:28px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;border:1px solid transparent}
+.cell.ok{background:var(--ok-bg);color:var(--ok)} .cell.bad{background:var(--bad-bg);color:var(--bad)}
+.cell.none{background:var(--soft);color:var(--muted)}
+.cell:hover{border-color:var(--ink)}
+.q{padding:5px 6px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.row-actions{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+pre,code{font-family:var(--mono);font-size:13px}
+pre{background:var(--soft);padding:12px;border-radius:8px;overflow:auto;margin:6px 0;white-space:pre-wrap;word-break:break-word}
+label{font-size:13px;color:var(--muted);font-weight:600}
+select,textarea,input[type=text]{width:100%;font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 10px}
+textarea{min-height:70px;resize:vertical}
+.btn{border:0;background:var(--ink);color:var(--panel);font:inherit;font-weight:600;padding:10px 18px;border-radius:8px;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:default}
+.chk{display:inline-flex;gap:6px;align-items:center;margin-right:16px;font-size:14px;color:var(--ink);font-weight:500}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--c);display:inline-block}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.mini{max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.mini table{font-size:13px} .mini td,.mini th{padding:5px 8px}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+.note{font-size:13px;color:var(--muted)}
+.drawer{position:fixed;inset:0 0 0 auto;width:min(720px,100%);background:var(--panel);border-left:1px solid var(--line);box-shadow:-12px 0 40px rgba(0,0,0,.18);transform:translateX(105%);transition:transform .2s;z-index:10;overflow:auto;padding:22px}
+.drawer.open{transform:none}
+.close{float:right;border:0;background:var(--soft);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer;font:inherit}
+.split{display:flex;gap:10px;align-items:center}
+.spin{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:s 0.8s linear infinite;display:inline-block}
+@keyframes s{to{transform:rotate(360deg)}}
+@media (max-width:820px){ .grid3{grid-template-columns:1fr} .heat{grid-template-columns:52px repeat(3,1fr)} .heat .q,.heat .qh{display:none} nav button{padding:8px 9px} .brand small{display:none}}
+</style>
+</head>
+<body>
+<header><div class="wrap bar">
+  <div class="brand">SQL Bake-Off <small>Project 0 · text-to-SQL on a bookstore DB</small></div>
+  <nav>
+    <button data-view="results" class="on">Results</button>
+    <button data-view="play">Playground</button>
+    <button data-view="data">Data</button>
+  </nav>
+</div></header>
+
+<main class="wrap">
+  <section id="v-results"></section>
+  <section id="v-play" hidden></section>
+  <section id="v-data" hidden></section>
+</main>
+<aside class="drawer" id="drawer"></aside>
+
+<script>
+const ROLES = ["top","cheap","local"];
+const ROLE_LABEL = {top:"Top API model", cheap:"Cheap API model", local:"Open-weights (local)"};
+const color = r => `var(--${r})`;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt = (n, d=0) => n === "" || n == null || isNaN(+n) ? "—" : (+n).toLocaleString(undefined,{maximumFractionDigits:d, minimumFractionDigits:d});
+const money = n => n === "" || n == null ? "—" : "$" + fmt(n, +n < 1 ? 3 : 2);
+let META = null, RES = null;
+
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("nav button").forEach(x => x.classList.toggle("on", x === b));
+  ["results","play","data"].forEach(v => $("#v-"+v).hidden = v !== b.dataset.view);
+});
+
+function rowsTable(cols, rows){
+  if (!rows) return "";
+  if (!rows.length) return `<div class="note">0 rows</div>`;
+  const head = cols ? `<tr>${cols.map(c=>`<th>${esc(c)}</th>`).join("")}</tr>` : "";
+  return `<div class="mini"><table>${head}${rows.map(r=>`<tr>${r.map(v=>`<td>${esc(v)}</td>`).join("")}</tr>`).join("")}</table></div>`;
+}
+const failPill = f => !f ? `<span class="pill ok">correct</span>` :
+  `<span class="pill ${f==="wrong_result"?"bad":"warn"}">${esc(f.replace("_"," "))}</span>`;
+
+/* ---------------- Results ---------------- */
+function renderResults(){
+  const el = $("#v-results");
+  if (!RES || !RES.available){
+    el.innerHTML = `<h2>Results</h2><p class="sub">No benchmark results yet.</p>
+      <div class="panel empty">Run the benchmark to fill this page:<pre style="text-align:left;max-width:640px;margin:14px auto">python src/run.py
+python src/score.py --items data/items.jsonl --db data/bookstore.db --candidates results/raw_outputs.jsonl --out results/per_item.csv
+python src/cost.py</pre>Then reload. The Playground already works if a model is available.</div>`;
+    return;
+  }
+  const S = Object.fromEntries(RES.summary.map(s => [s.model, s]));
+  const roles = ROLES.filter(r => S[r]);
+  const cm = RES.cost_model || {models:{}, break_even:{}};
+  const cards = roles.map(r => { const s = S[r]; const pct = s.test_total ? 100*s.test_correct/s.test_total : 0;
+    return `<div class="card" style="--c:${color(r)}">
+      <div class="role">${ROLE_LABEL[r]}</div><div class="mname">${esc(s.model_name)}</div>
+      <div class="big">${s.test_correct}<span> / ${s.test_total} correct</span></div>
+      <div class="meter"><i style="width:${pct}%"></i></div>
+      <div class="kv">
+        <span>Latency p50</span><b>${fmt(s.p50_ms)} ms</b>
+        <span>Latency p95</span><b>${fmt(s.p95_ms)} ms</b>
+        <span>Cost / 1k requests</span><b>${money(s.cost_per_1k_usd)}</b>
+        <span>Tokens in / out (mean)</span><b>${fmt(s.mean_input_tokens)} / ${fmt(s.mean_output_tokens)}</b>
+        ${s.tokens_per_s ? `<span>Generation speed</span><b>${fmt(s.tokens_per_s,1)} tok/s</b>` : ""}
+      </div></div>`; }).join("");
+
+  const F = ["wrong_result","sql_error","parse_error","refusal","timeout","api_error"];
+  const failTable = `<table><tr><th>Model</th><th class="n">Correct</th>${F.map(f=>`<th class="n">${f.replace("_"," ")}</th>`).join("")}</tr>
+    ${roles.map(r=>`<tr><td><span class="dot" style="--c:${color(r)}"></span> ${esc(S[r].model_name)}</td><td class="n"><b>${S[r].accuracy}</b></td>${F.map(f=>`<td class="n">${S[r][f]||0}</td>`).join("")}</tr>`).join("")}</table>`;
+
+  const be = Object.entries(cm.break_even||{}).map(([m,b]) =>
+    `<li>vs <b>${esc(S[m]?.model_name||m)}</b>: self-hosting is cheaper above <b>${fmt(b.requests_per_day)}</b> requests/day${b.within_one_box_capacity?"":` <span class="pill warn">beyond one GPU's capacity (${fmt(b.one_box_capacity_per_month/30)}/day)</span>`}</li>`).join("");
+  const costTable = `<table><tr><th>Model</th><th class="n">$/1k</th><th class="n">Monthly today</th><th class="n">Monthly at 100×</th></tr>
+    ${roles.map(r=>`<tr><td><span class="dot" style="--c:${color(r)}"></span> ${esc(S[r].model_name)}</td><td class="n">${money(S[r].cost_per_1k_usd)}</td><td class="n">${money(S[r].monthly_usd_today)}</td><td class="n">${money(S[r].monthly_usd_100x)}</td></tr>`).join("")}</table>
+    <p class="note">Today = ${fmt(cm.assumptions?.today_requests_per_day)} requests/day; 100× = ${fmt((cm.assumptions?.today_requests_per_day||0)*100)}/day. Self-hosted cost includes amortised hardware, power and ops time (see <code>src/config.py</code>).</p>
+    ${be ? `<h3 style="margin-top:14px">Break-even volume</h3><ul style="margin:0;padding-left:18px">${be}</ul>`:""}`;
+
+  // per-item grid
+  const by = {}; RES.per_item.forEach(r => (by[r.id] ??= {})[r.model] = r);
+  const items = META.items;
+  const view = (window.__gridSplit || "test"), dis = window.__onlyDisagree;
+  const shown = items.filter(it => (view==="all" || it.split===view) && (!dis || new Set(roles.map(r=>by[it.id]?.[r]?.correct)).size > 1));
+  const grid = `<div class="heat"><div class="h">Item</div>${roles.map(r=>`<div class="h" style="color:${color(r)}">${r}</div>`).join("")}<div class="h qh">Question</div>
+    ${shown.map(it => `<div class="id">${it.id}</div>${roles.map(r => { const x = by[it.id]?.[r];
+      return `<div class="cell ${!x?"none":x.correct==="1"?"ok":"bad"}" data-id="${it.id}" title="${x?esc(x.failure||"correct"):"not run"}">${!x?"·":x.correct==="1"?"✓":"✗"}</div>`;}).join("")}
+      <div class="q" data-id="${it.id}" title="${esc(it.question)}">${esc(it.question)}</div>`).join("")}</div>`;
+
+  el.innerHTML = `<h2>Results</h2><p class="sub">Accuracy on the frozen test split (${S[roles[0]].test_total} items). Latency over all ${S[roles[0]].calls_timed} sequential calls per model. Run date ${esc(S[roles[0]].run_date)}.</p>
+    <div class="grid3">${cards}</div>
+    <div class="panel"><h3>Where the errors come from</h3>${failTable}<p class="note">Parse errors, refusals and timeouts count as wrong.</p></div>
+    <div class="panel"><h3>Cost</h3>${costTable}</div>
+    <div class="panel"><h3>Every item</h3>
+      <div class="row-actions">
+        <select id="gsplit" style="width:auto"><option value="test">Test split</option><option value="dev">Dev split</option><option value="all">All items</option></select>
+        <label class="chk"><input type="checkbox" id="gdis" ${dis?"checked":""}> only items where models disagree</label>
+        <span class="note">${shown.length} items · click a cell for details</span>
+      </div>${grid}</div>`;
+  $("#gsplit").value = view;
+  $("#gsplit").onchange = e => { window.__gridSplit = e.target.value; renderResults(); };
+  $("#gdis").onchange = e => { window.__onlyDisagree = e.target.checked; renderResults(); };
+  el.querySelectorAll("[data-id]").forEach(c => c.onclick = () => openItem(c.dataset.id, by, roles));
+}
+
+function parseRows(s){ try { return s ? JSON.parse(s) : null } catch { return null } }
+function openItem(id, by, roles){
+  const it = META.items.find(i => i.id === id);
+  const any = Object.values(by[id]||{})[0];
+  $("#drawer").innerHTML = `<button class="close" onclick="drawer.classList.remove('open')">Close</button>
+    <div class="note">${it.id} · ${esc(it.category)} · ${it.split}</div>
+    <h2 style="margin:6px 0 14px">${esc(it.question)}</h2>
+    <h3>Reference SQL</h3><pre>${esc(it.reference_sql)}</pre>
+    ${any ? `<h3>Expected result</h3>${rowsTable(null, parseRows(any.expected_rows))}` : ""}
+    ${roles.map(r => { const x = by[id]?.[r]; if (!x) return "";
+      return `<div class="panel" style="margin-top:16px;border-top:4px solid ${color(r)}">
+        <div class="split"><span class="role" style="--c:${color(r)}">${ROLE_LABEL[r]}</span>${failPill(x.failure)}<span class="note" style="margin-left:auto">${fmt(x.latency_ms)} ms</span></div>
+        <pre>${esc(x.candidate_sql || "(no SQL parsed)")}</pre>
+        ${x.error ? `<div class="note">${esc(x.error)}</div>` : ""}
+        ${x.correct!=="1" && x.actual_rows ? `<label>Returned</label>${rowsTable(null, parseRows(x.actual_rows))}` : ""}
+        ${!x.candidate_sql && x.raw_output ? `<label>Raw output</label><pre>${esc(x.raw_output)}</pre>` : ""}
+      </div>`; }).join("")}`;
+  $("#drawer").classList.add("open");
+}
+
+/* ---------------- Playground ---------------- */
+function renderPlay(){
+  const el = $("#v-play");
+  const opts = ["test","dev"].map(sp => `<optgroup label="${sp} split">${META.items.filter(i=>i.split===sp).map(i=>`<option value="${i.id}">${i.id} — ${esc(i.question.slice(0,90))}</option>`).join("")}</optgroup>`).join("");
+  el.innerHTML = `<h2>Playground</h2><p class="sub">Same prompt, settings, parser and scorer as the benchmark. Calls here are not saved to <code>results/</code>.</p>
+    <div class="panel">
+      <label>Question</label>
+      <select id="pitem"><option value="">✎ Write my own question…</option>${opts}</select>
+      <textarea id="pq" placeholder="e.g. Which country's customers spent the most on shipped orders?" style="margin-top:8px"></textarea>
+      <div style="margin:14px 0">${ROLES.map(r => { const m = META.models[r];
+        return `<label class="chk" style="--c:${color(r)}"><input type="checkbox" value="${r}" ${m.available?"checked":""}> <span class="dot"></span> ${esc(m.name)} ${m.available?"":`<span class="pill dim">${m.provider==="ollama"?"Ollama not running":"no API key"}</span>`}</label>`;}).join("")}</div>
+      <button class="btn" id="prun">Run</button>
+    </div>
+    <div id="pref"></div><div class="cols" id="pout"></div>`;
+  const sel = $("#pitem"), ta = $("#pq");
+  sel.onchange = () => { const it = META.items.find(i=>i.id===sel.value); ta.value = it ? it.question : ""; ta.readOnly = !!it; };
+  $("#prun").onclick = async () => {
+    const roles = [...el.querySelectorAll("input[type=checkbox]:checked")].map(c=>c.value);
+    if (!roles.length || (!sel.value && !ta.value.trim())) return;
+    $("#prun").disabled = true; $("#pref").innerHTML = "";
+    $("#pout").innerHTML = roles.map(r => `<div class="card" id="o-${r}" style="--c:${color(r)}"><div class="role">${ROLE_LABEL[r]}</div><div class="mname">${esc(META.models[r].name)}</div><span class="spin"></span></div>`).join("");
+    let refShown = false;
+    await Promise.all(roles.map(async r => {   // different models in parallel; each model is a single call
+      let d; try { d = await (await fetch("/api/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:r,item_id:sel.value||null,question:ta.value})})).json(); }
+      catch(e){ d = {status:"api_error", error:String(e)}; }
+      if (d.reference_sql && !refShown){ refShown = true;
+        $("#pref").innerHTML = `<div class="panel"><h3>Expected (reference)</h3><pre>${esc(d.reference_sql)}</pre>${rowsTable(d.expected_columns,d.expected_rows)}</div>`; }
+      const verdict = d.correct === undefined ? (d.status==="ok" && !d.sql_error ? `<span class="pill dim">no label (own question)</span>` : failPill(d.status!=="ok"?d.status:"sql_error")) : failPill(d.failure);
+      $("#o-"+r).innerHTML = `<div class="split"><span class="role">${ROLE_LABEL[r]}</span>${verdict}</div><div class="mname">${esc(d.model_name||META.models[r].name)}</div>
+        <pre>${esc(d.sql || "(no SQL parsed)")}</pre>
+        ${d.error||d.sql_error ? `<div class="note" style="color:var(--bad)">${esc(d.error||d.sql_error)}</div>`:""}
+        ${rowsTable(d.columns,d.rows)}
+        <div class="kv" style="margin-top:10px"><span>Latency</span><b>${fmt(d.latency_ms)} ms</b><span>Tokens in / out</span><b>${fmt(d.input_tokens)} / ${fmt(d.output_tokens)}</b>${d.eval_tokens_per_s?`<span>Speed</span><b>${fmt(d.eval_tokens_per_s,1)} tok/s</b>`:""}</div>`;
+    }));
+    $("#prun").disabled = false;
+  };
+}
+
+/* ---------------- Data ---------------- */
+function renderData(){
+  const s = META.settings;
+  $("#v-data").innerHTML = `<h2>Data &amp; setup</h2><p class="sub">${META.items.length} labelled items: ${META.items.filter(i=>i.split==="test").length} test, ${META.items.filter(i=>i.split==="dev").length} dev.</p>
+    <div class="cols"><div class="panel"><h3>Models</h3><table>${ROLES.map(r=>`<tr><td><span class="dot" style="--c:${color(r)}"></span> ${ROLE_LABEL[r]}</td><td><code>${esc(META.models[r].name)}</code></td></tr>`).join("")}</table>
+      <p class="note">Max output tokens ${s.max_output_tokens} for all · local temperature ${s.temperature_local} · API reasoning effort "${s.reasoning_effort}" (OpenAI reasoning models reject a temperature setting) · timeout ${s.timeout_s}s.</p></div>
+    <div class="panel"><h3>Schema</h3><pre style="max-height:260px">${esc(META.schema)}</pre></div></div>
+    <div class="panel"><h3>Prompt (identical for all three)</h3><pre>${esc(META.prompt)}</pre></div>
+    <div class="panel"><h3>Items</h3><table><tr><th>ID</th><th>Split</th><th>Category</th><th>Question</th></tr>
+      ${META.items.map(i=>`<tr><td><code>${i.id}</code></td><td>${i.split}</td><td class="note">${esc(i.category)}</td><td>${esc(i.question)}<pre style="margin-top:4px">${esc(i.reference_sql)}</pre></td></tr>`).join("")}</table></div>`;
+}
+
+(async () => {
+  [META, RES] = await Promise.all([fetch("/api/meta").then(r=>r.json()), fetch("/api/results").then(r=>r.json())]);
+  renderResults(); renderPlay(); renderData();
+})();
+</script>
+</body>
+</html>
