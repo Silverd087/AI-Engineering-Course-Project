@@ -1,16 +1,7 @@
-"""Human checkpoint: the `approve` node (task A5).
-
-TODO:
-- approve_node(state): for each write call, interrupt({"tool", "args", "diff"})
-  and resume with "y" | "n" | "q"
-- "n" -> ToolMessage carrying ToolResult.failure(ErrorType.REJECTED_BY_HUMAN, ...)
-- "q" -> stop_reason = "user_quit"
-- ScriptedApprover for eval: approve_all / reject_nth / reject_outside_allowed
-"""
-
-"""Human checkpoint: the approve node (task A5)."""
+"""Human checkpoint: the approve node (task A5, A6)."""
 
 import difflib
+import time
 
 from langchain_core.messages import ToolMessage
 from langgraph.types import interrupt
@@ -19,6 +10,7 @@ from agent.nodes import WRITE_TOOLS, last_tool_calls
 from agent.state import AgentState
 from agent.stop import StopReason
 from agent.tools.base import ErrorType, ToolResult
+from agent.trace import TraceRecord
 
 
 def describe(call: dict) -> dict:
@@ -41,7 +33,7 @@ def describe(call: dict) -> dict:
     return {"tool": name, "args": args, "diff": diff}
 
 
-def approve_node(state: AgentState) -> dict:
+def approve_node(state: AgentState, trace, run_id: str) -> dict:
     rejections = []
     for call in last_tool_calls(state["messages"]):
         if call["name"] not in WRITE_TOOLS:
@@ -49,16 +41,37 @@ def approve_node(state: AgentState) -> dict:
 
         answer = interrupt(describe(call))  # the run pauses here until someone resumes it
 
+        if answer == "y":
+            continue
+
+        # Record the human's decision in the trace, for both rejections and quits.
+        now = time.time()
+        error_type = "user_quit" if answer == "q" else ErrorType.REJECTED_BY_HUMAN.value
+        trace.write(
+            TraceRecord(
+                run_id=run_id,
+                step=state["steps"],
+                tool=call["name"],
+                args=call["args"],
+                ok=False,
+                error_type=error_type,
+                output_preview=f"Human answered '{answer}'",
+                approved=False,
+                t_start=now,
+                t_end=now,
+            )
+        )
+
         if answer == "q":
             return {"stop_reason": StopReason.USER_QUIT.value}
-        if answer != "y":
-            rejections.append(
-                ToolMessage(
-                    content=ToolResult.failure(
-                        ErrorType.REJECTED_BY_HUMAN,
-                        f"The human rejected this change to {call['name']}. Try a different approach, or call finish.",
-                    ).to_json(),
-                    tool_call_id=call["id"],
-                )
+
+        rejections.append(
+            ToolMessage(
+                content=ToolResult.failure(
+                    ErrorType.REJECTED_BY_HUMAN,
+                    f"The human rejected this change to {call['name']}. Try a different approach, or call finish.",
+                ).to_json(),
+                tool_call_id=call["id"],
             )
+        )
     return {"messages": rejections}

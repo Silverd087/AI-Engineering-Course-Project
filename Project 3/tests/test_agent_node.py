@@ -6,6 +6,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 from agent.config import Settings
 from agent.nodes import agent_node
 from agent.state import AgentState
+from agent.prompts import SYSTEM_PROMPT
 
 SETTINGS = Settings(model="test-model", price_input_per_mtok=2.0, price_output_per_mtok=8.0)
 
@@ -41,11 +42,12 @@ def test_agent_node_adds_model_reply_to_messages():
     assert result["messages"] == [reply]
 
 
-def test_agent_node_sends_current_messages_to_model():
+def test_agent_node_sends_system_prompt_then_messages():
     model = FakeModel(AIMessage(content="ok"))
     state = make_state()
     agent_node(state, model, SETTINGS)
-    assert model.seen == state["messages"]
+    assert model.seen[0].content == SYSTEM_PROMPT
+    assert model.seen[1:] == state["messages"]
 
 
 def test_agent_node_adds_cost_to_running_total():

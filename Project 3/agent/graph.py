@@ -1,3 +1,5 @@
+"""Builds and compiles the LangGraph StateGraph (task A4, A5)."""
+
 import time
 
 from langgraph.graph import END, START, StateGraph
@@ -16,6 +18,9 @@ def build_graph(model, tools, settings, trace, run_id, checkpointer=None):
     def run_tools(state: AgentState) -> dict:
         return tools_node(state, tools, trace, run_id)
 
+    def approve(state: AgentState) -> dict:
+        return approve_node(state, trace, run_id)
+
     def stop(state: AgentState) -> dict:
         return stop_node(state, limits, now=time.monotonic())
 
@@ -26,7 +31,7 @@ def build_graph(model, tools, settings, trace, run_id, checkpointer=None):
     builder.add_node("agent", agent)
     builder.add_node("tools", run_tools)
     builder.add_node("stop", stop)
-    builder.add_node("approve", approve_node)
+    builder.add_node("approve", approve)
 
     builder.add_edge(START, "agent")
     builder.add_conditional_edges("agent", route, {"tools": "tools", "stop": "stop", "approve": "approve"})

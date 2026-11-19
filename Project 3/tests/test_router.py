@@ -69,4 +69,5 @@ def test_stop_wins_over_write_call():
 
 def test_stop_node_records_the_reason():
     state = make_state(call("read_file", path="a.py"), cost_usd=LIMITS.max_cost_usd)
-    assert stop_node(state, LIMITS, now=START) == {"stop_reason": StopReason.BUDGET.value}
+    result = stop_node(state, LIMITS, now=START)
+    assert result["stop_reason"] == StopReason.BUDGET.value

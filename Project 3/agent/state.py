@@ -16,3 +16,4 @@ class AgentState(TypedDict):
     recent_calls: list[str]     # signatures "tool:{sorted json args}" for the repetition rule
     started_at: float           # time.monotonic() at start, for the timeout rule
     stop_reason: str | None     # done | max_steps | budget | looping | timeout | user_quit
+    finish_status: str | None   # success | gave_up, only set when the model called finish
