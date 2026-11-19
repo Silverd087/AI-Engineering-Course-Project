@@ -216,7 +216,7 @@ success:
   max_steps: 15
 ```
 
-### Scenario mix (target ≥ 30; 18 written so far)
+### Scenario mix (target ≥ 30; 30 written so far)
 
 | Group | Count | Purpose |
 |---|---|---|
