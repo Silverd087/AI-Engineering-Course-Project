@@ -1,6 +1,6 @@
 .PHONY: setup run test eval eval-injection sandbox-reset
 
-SCENARIO ?= utcnow_basic
+SCENARIO ?= utcnow_happy
 
 setup:
 	uv sync
