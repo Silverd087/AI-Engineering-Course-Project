@@ -5,6 +5,7 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 from pydantic import ValidationError
 
 from agent.tools.base import ErrorType, StrictArgs, ToolResult
+from agent.tools.denylist import is_secret_path
 
 MAX_RESULTS = 500
 
@@ -42,8 +43,8 @@ def list_files(workspace: str, args: dict) -> ToolResult:
         if not path.resolve().is_relative_to(root):
             continue  # a symlink that points outside the workspace
         rel = path.relative_to(root)
-        if ".git" in rel.parts:
-            continue
+        if ".git" in rel.parts or is_secret_path(rel.as_posix()):
+            continue  # never list git internals or secrets files
         matches.append(rel.as_posix())
 
     matches.sort()

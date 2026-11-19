@@ -1,6 +1,13 @@
-"""search_code: find lines matching a regex in the workspace (task B4)."""
+"""search_code: find lines matching a regex in the workspace (task B4).
 
+The search runs in a child process with a time limit, because Python's re module cannot
+be interrupted, and a catastrophic regex would otherwise hang the whole run.
+"""
+
+import json
 import re
+import subprocess
+import sys
 from pathlib import Path, PurePosixPath, PureWindowsPath
 
 from pydantic import Field, ValidationError
@@ -8,9 +15,8 @@ from pydantic import Field, ValidationError
 from agent.tools.base import ErrorType, StrictArgs, ToolResult
 
 MAX_PATTERN_CHARS = 200
-MAX_MATCHES = 100
-MAX_LINE_CHARS = 200
-MAX_FILE_BYTES = 1_000_000
+SEARCH_TIMEOUT_S = 5
+PACKAGE_ROOT = Path(__file__).resolve().parents[2]  # the folder that contains the 'agent' package
 
 
 class SearchCodeArgs(StrictArgs):
@@ -28,7 +34,7 @@ def search_code(workspace: str, args: dict) -> ToolResult:
         )
 
     try:
-        regex = re.compile(parsed.pattern)
+        re.compile(parsed.pattern)
     except re.error as e:
         return ToolResult.failure(
             ErrorType.BAD_ARGUMENTS,
@@ -47,36 +53,26 @@ def search_code(workspace: str, args: dict) -> ToolResult:
             "The glob must be relative to the repository root, such as 'src/**/*.py'. Do not use '..' or absolute paths.",
         )
 
-    root = Path(workspace).resolve()
-    matches = []
-    total = 0
-    for path in sorted(root.glob(pattern)):
-        if not path.is_file():
-            continue
-        if not path.resolve().is_relative_to(root):
-            continue  # a symlink that points outside the workspace
-        rel = path.relative_to(root)
-        if ".git" in rel.parts:
-            continue
-        if path.stat().st_size > MAX_FILE_BYTES:
-            continue  # too large to be source code worth searching
-        data = path.read_bytes()
-        if b"\x00" in data[:8000]:
-            continue  # binary file
+    request = json.dumps({"workspace": str(workspace), "pattern": parsed.pattern, "glob": parsed.glob})
+    try:
+        proc = subprocess.run(
+            [sys.executable, "-m", "agent.tools.search_worker"],
+            input=request,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            cwd=PACKAGE_ROOT,
+            timeout=SEARCH_TIMEOUT_S,
+        )
+    except subprocess.TimeoutExpired:
+        return ToolResult.failure(
+            ErrorType.TIMEOUT,
+            f"The search took longer than {SEARCH_TIMEOUT_S} seconds and was stopped. Use a simpler pattern.",
+        )
 
-        text = data.decode("utf-8", errors="replace")
-        for number, line in enumerate(text.splitlines(), start=1):
-            if regex.search(line):
-                total += 1
-                if len(matches) < MAX_MATCHES:
-                    matches.append({
-                        "path": rel.as_posix(),
-                        "line": number,
-                        "text": line.strip()[:MAX_LINE_CHARS],
-                    })
-
-    return ToolResult.success({
-        "matches": matches,
-        "total": total,
-        "truncated": total > MAX_MATCHES,
-    })
+    if proc.returncode != 0:
+        return ToolResult.failure(
+            ErrorType.INTERNAL,
+            "The search failed unexpectedly. Try a simpler pattern or another tool.",
+        )
+    return ToolResult.success(json.loads(proc.stdout))

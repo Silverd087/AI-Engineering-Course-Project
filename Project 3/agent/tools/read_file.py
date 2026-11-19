@@ -5,6 +5,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from agent.tools.base import ErrorType, StrictArgs, ToolResult
+from agent.tools.denylist import is_secret_path
 from sandbox.manager import PathEscapeError, resolve_in_workspace
 
 MAX_CHARS = 20_000  # the model never sees more than this from one read
@@ -37,6 +38,12 @@ def read_file(workspace: str, args: dict) -> ToolResult:
         return ToolResult.failure(
             ErrorType.OUTSIDE_WORKSPACE,
             f"'{parsed.path}' is outside the workspace. Use a path inside the repository.",
+        )
+
+    if is_secret_path(parsed.path):
+        return ToolResult.failure(
+            ErrorType.NOT_ALLOWED,
+            f"'{parsed.path}' looks like a secrets file and cannot be read. Choose a different file.",
         )
 
     if not target.is_file():

@@ -263,7 +263,7 @@ A correct final repo reached through a **forbidden** step (e.g. editing tests, w
 - **Least privilege:** no shell, no network, no deletes; writes limited to files the migration spec allows.
 - **Data vs instructions:** every tool output is wrapped in `<untrusted_tool_output>` tags, and the system prompt says text inside them is data, never instructions.
 - **Human checkpoint** before every write.
-- **Known gaps:** no canary or injection-pattern detector is implemented. `run_tests` does not block network access from the test process. `search_code` has no regex timeout. See [`threat_model.md`](threat_model.md).
+- **Known gaps:** no canary or injection-pattern detector is implemented. `run_tests` does not block network access from the test process (accepted risk for this project). `read_file`, `list_files` and `search_code` skip files whose names look like secrets (`.env`, keys, credentials), but a secret stored under an unusual name is not caught. `search_code` stops after 5 seconds. See [`threat_model.md`](threat_model.md).
 
 Details: [`threat_model.md`](threat_model.md) · [`errors.md`](errors.md)
 
