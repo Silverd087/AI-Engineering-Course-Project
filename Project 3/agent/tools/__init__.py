@@ -1,12 +1,11 @@
-"""Agent tools. Each tool is a LangChain StructuredTool built from a function
-with a StrictArgs schema, and carries metadata={"is_write": bool}.
+"""Tool registry: the schemas the model sees, and the functions that run them.
+
+Each tool is a plain function (workspace, args) -> ToolResult with a Pydantic args model.
 
 Read:  list_files, read_file, search_code
 Exec:  run_tests
 Write: edit_file, open_pull_request   (go through the human checkpoint)
 Done:  finish
-"""
-"""Tool registry: the schemas the model sees, and the functions that run them.
 
 build_tools() is the one place that decides which tools exist for a run.
 """
